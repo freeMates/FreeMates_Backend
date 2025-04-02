@@ -67,9 +67,9 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.AWS }}
+          host: ${{ secrets.SERVER_HOSTS }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_KEY }}
           port: 2022
           script: |
             set -e
