@@ -70,7 +70,7 @@ jobs:
           host: ${{ secrets.SERVER_HOSTS }}
           username: ubuntu
           key: ${{ secrets.SERVER_KEY }}
-          port: 2022
+          port: 22
           script: |
             set -e
             echo "환경변수 설정.."
