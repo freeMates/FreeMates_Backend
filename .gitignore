@@ -16,8 +16,9 @@ build/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
-##Database ##
-*.yml
+##project yml ##
+/src/main/resources/application-prod.yml
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
