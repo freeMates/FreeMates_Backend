@@ -1,12 +1,14 @@
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
+    path: /docs/swagger
 
 
 
 spring:
   profiles:
-    active: prod
+    active: dev
 
-  jwt:
-    secret: ${JWT_KEY}
+jwt:
+  secret-key: ${JWT_KEY}
+  access-exp-time: 3600000 # 액세스 토큰 만료 시간 (밀리초 단위, 예: 1시간)
+  refresh-exp-time: 60480000 # 리프레시 토큰 만료 시간 (7일, 밀리초 단위)
