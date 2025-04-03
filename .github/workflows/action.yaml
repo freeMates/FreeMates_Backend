@@ -24,6 +24,11 @@ jobs:
       - name: Gradle Wrapper 실행권한 부여
         run: chmod +x gradlew
 
+      - name: application-prod.yml 생성
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_PROD_YML }}" > ./src/main/resources/application-prod.yml
+
       # prod 프로파일을 활성화하여 빌드 ( 테스트 코드 테스트 X )
       - name: Build with Gradle
         run: ./gradlew clean build -x test -Dspring.profiles.active=prod
@@ -106,9 +111,6 @@ jobs:
             sudo docker run -d -p ${PORT}:8080 --name $CONTAINER_NAME \
             -e TZ=Asia/Seoul \
             -e "SPRING_PROFILES_ACTIVE=prod" \
-            -e JWT_KEY=${{ secrets.JWT_KEY }} \
-            -e SERVER_HOSTS=${{ secrets.SERVER_HOSTS }} \
-            -e SERVER_DB_PASSWORD=${{ secrets.SERVER_DB_PASSWORD }} \
             -v /etc/localtime:/etc/localtime:ro \
             -v /volume1/project/daye200_lab/backend:/mnt/daye200_lab \
             ${{ secrets.DOCKER_USERNAME }}/daye200-lab-back:${BRANCH}
