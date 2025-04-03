@@ -1,14 +1,10 @@
 package jombi.freemates.dto;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
-public class JoinDTO {
-
+public class LoginRequest {
     private String username;
-
     private String password;
-
 }
+
