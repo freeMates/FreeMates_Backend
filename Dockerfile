@@ -1,4 +1,4 @@
-FROM amazoncorretto:17
+FROM amazoncorretto:21
 # FROM openjdk:17-jdk
 ARG JAR_FILE=build/libs/*.jar
 
