@@ -104,11 +104,14 @@ jobs:
 
             echo "새로운 컨테이너 $CONTAINER_NAME 실행 중..."
             sudo docker run -d -p ${PORT}:8080 --name $CONTAINER_NAME \
-              -e TZ=Asia/Seoul \
-              -e "SPRING_PROFILES_ACTIVE=prod" \
-              -v /etc/localtime:/etc/localtime:ro \
-              -v /volume1/project/daye200_lab/backend:/mnt/daye200_lab \
-              ${{ secrets.DOCKER_USERNAME }}/daye200-lab-back:${BRANCH}
+            -e TZ=Asia/Seoul \
+            -e "SPRING_PROFILES_ACTIVE=prod" \
+            -e JWT_KEY=${{ secrets.JWT_KEY }} \
+            -e SERVER_HOSTS=${{ secrets.SERVER_HOSTS }} \
+            -e SERVER_DB_PASSWORD=${{ secrets.SERVER_DB_PASSWORD }} \
+            -v /etc/localtime:/etc/localtime:ro \
+            -v /volume1/project/daye200_lab/backend:/mnt/daye200_lab \
+            ${{ secrets.DOCKER_USERNAME }}/daye200-lab-back:${BRANCH}
 
             echo "불필요한 dangling(<none>) 이미지 정리..."
             sudo docker image prune -af
