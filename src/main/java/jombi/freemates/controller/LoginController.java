@@ -17,8 +17,8 @@ import java.util.Iterator;
 @RestController
 public class LoginController {
 
-    @PostMapping("/api/auth/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok().build();
-    }
+  @PostMapping("/api/auth/login")
+  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    return ResponseEntity.ok().build();
+  }
 }

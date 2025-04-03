@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RegisterController {
 
-    private final RegisterService registerService;
+  private final RegisterService registerService;
 
-    @PostMapping("/api/auth/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(registerService.register(request));
-    }
+  @PostMapping("/api/auth/register")
+  public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+    return ResponseEntity.ok(registerService.register(request));
+  }
 }
