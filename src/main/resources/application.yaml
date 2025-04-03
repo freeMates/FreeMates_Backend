@@ -1,0 +1,12 @@
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+
+
+spring:
+  profiles:
+    active: prod
+
+  jwt:
+    secret: ${JWT_KEY}
