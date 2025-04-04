@@ -76,6 +76,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SERVER_KEY }}
           port: 22
+          debug: true
           script: |
             set -e
             echo "환경변수 설정.."
