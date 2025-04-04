@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    # PostgreSQL 설정
+    url: jdbc:postgresql://localhost:5432/freemates
+    username: postgres
+    password: \\\\
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: admin
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    jombi:
+      freemates: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor: TRACE
+
+jwt:
+  secret-key: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb
+  access-exp-time: 3600000 # 액세스 토큰 만료 시간 (밀리초 단위, 예: 1시간)
+  refresh-exp-time: 60480000 # 리프레시 토큰 만료 시간 (7일, 밀리초 단위)
+  issuer: "FREEMATES"
+
+smb:
+  host: suh-project.synology.me
+  port: 44445
+  username: kimchi
+  password: Kimchi123@
+  root-dir: web
+  dir: freemates/images

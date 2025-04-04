@@ -1,7 +1,31 @@
 spring:
   profiles:
-    active: dev
+    active: prod
+  config:
+    import:
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+        open-in-view: false
+        use_sql_comments: true
+  servlet:
+    multipart:
+      enabled: true # 파일 업로드 허용
+      max-file-size: 200MB # 업로드 파일 최대 크기
+      max-request-size: 1000MB # 요청 전체 최대 크기
+      file-size-threshold: 10MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 springdoc:
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
   swagger-ui:
     path: /docs/swagger

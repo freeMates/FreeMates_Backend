@@ -1,14 +1,14 @@
-package jombi.freemates.filter;
+package jombi.freemates.util.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jombi.freemates.dto.CustomUserDetails;
-import jombi.freemates.dto.LoginRequest;
-import jombi.freemates.exception.CustomException;
-import jombi.freemates.exception.ErrorCode;
+import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.dto.LoginRequest;
+import jombi.freemates.util.exception.CustomException;
+import jombi.freemates.util.exception.ErrorCode;
 import jombi.freemates.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

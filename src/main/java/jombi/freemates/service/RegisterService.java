@@ -1,13 +1,12 @@
 package jombi.freemates.service;
 
-import jombi.freemates.dto.RegisterRequest;
-import jombi.freemates.entity.UserEntity;
-import jombi.freemates.exception.CustomException;
-import jombi.freemates.exception.ErrorCode;
+import jombi.freemates.model.dto.RegisterRequest;
+import jombi.freemates.model.postgres.UserEntity;
+import jombi.freemates.util.exception.CustomException;
+import jombi.freemates.util.exception.ErrorCode;
 import jombi.freemates.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 

@@ -1,9 +1,8 @@
 package jombi.freemates.config;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jombi.freemates.filter.JwtFilter;
+import jombi.freemates.util.filter.JwtFilter;
 import jombi.freemates.util.JwtUtil;
-import jombi.freemates.filter.LoginFilter;
+import jombi.freemates.util.filter.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

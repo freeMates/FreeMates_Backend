@@ -1,6 +1,6 @@
 package jombi.freemates.controller;
 
-import jombi.freemates.dto.RegisterRequest;
+import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.service.RegisterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

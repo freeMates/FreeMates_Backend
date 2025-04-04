@@ -1,12 +1,12 @@
-package jombi.freemates.filter;
+package jombi.freemates.util.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jombi.freemates.config.SecurityUrls;
-import jombi.freemates.dto.CustomUserDetails;
-import jombi.freemates.entity.UserEntity;
+import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.postgres.UserEntity;
 import jombi.freemates.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
