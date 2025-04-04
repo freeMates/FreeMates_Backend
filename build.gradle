@@ -24,25 +24,64 @@ repositories {
 }
 
 dependencies {
-
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
+
+    // JUnit
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // JWT
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    //swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
 
+    // Dev Tool
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // PostgreSQL
+    implementation 'org.hibernate:hibernate-spatial:6.6.4.Final'
+    runtimeOnly 'org.postgresql:postgresql'
+
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3'
+
+    // jsoup
+    implementation 'org.jsoup:jsoup:1.15.4'
+
+    // OkHttp
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+
+    // JavaNetCookieJar
+    implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.9.3'
+
+    // Faker
+    implementation ('com.github.javafaker:javafaker:1.0.2') {exclude group: 'org.yaml', module: 'snakeyaml'}
+    implementation 'org.yaml:snakeyaml:2.2'  // 호환 버전
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+
+    // Reflection
+    implementation("org.reflections:reflections:0.10.2")
+
+    // SMB
+    implementation 'org.springframework.integration:spring-integration-smb:6.4.2'
 }
 
 tasks.named('test') {

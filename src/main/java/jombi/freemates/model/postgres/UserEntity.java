@@ -1,4 +1,4 @@
-package jombi.freemates.entity;
+package jombi.freemates.model.postgres;
 
 import jakarta.persistence.*;
 import lombok.*;

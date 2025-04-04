@@ -1,7 +1,7 @@
 package jombi.freemates.service;
 
-import jombi.freemates.dto.CustomUserDetails;
-import jombi.freemates.entity.UserEntity;
+import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.postgres.UserEntity;
 import jombi.freemates.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

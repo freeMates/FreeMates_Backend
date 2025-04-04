@@ -1,4 +1,4 @@
-package jombi.freemates.dto;
+package jombi.freemates.model.dto;
 
 import lombok.Getter;
 

@@ -1,12 +1,11 @@
-package jombi.freemates.dto;
+package jombi.freemates.model.dto;
 
 
-import jombi.freemates.entity.UserEntity;
+import jombi.freemates.model.postgres.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

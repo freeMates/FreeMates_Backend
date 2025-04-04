@@ -1,4 +1,4 @@
-package jombi.freemates.exception;
+package jombi.freemates.util.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
