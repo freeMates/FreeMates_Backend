@@ -40,10 +40,13 @@ dependencies {
     // JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-    // jwt
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    // jwt (11버전으로 변경)
+//    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+//    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+//    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.0'
 
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'

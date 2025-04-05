@@ -5,11 +5,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.LoginRequest;
+import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
-import jombi.freemates.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,14 +56,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
       Authentication authentication) throws IOException {
 
-    // UserDetails
-    CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-
     // AccessToken 발급
-    String accessToken = jwtUtil.createAccessToken(customUserDetails);
+    String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
 
     // RefreshToken 발급
-    String refreshToken = jwtUtil.createRefreshToken(customUserDetails);
+    String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
     // 헤더에 AccessToken 추가
     response.addHeader("Authorization", "Bearer " + accessToken);
@@ -73,7 +70,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     cookie.setHttpOnly(true); // HttpOnly 설정
     cookie.setSecure(true);
     cookie.setPath("/");
-    cookie.setMaxAge((int) (jwtUtil.getRefreshExpirationTime() / 1000)); // 쿠키 maxAge는 초 단위 이므로, 밀리초를 1000으로 나눔
+    cookie.setMaxAge((int) (JwtTokenType.REFRESH.getDurationMilliseconds() / 1000)); // 쿠키 maxAge는 초 단위 이므로, 밀리초를 1000으로 나눔
     response.addCookie(cookie);
 
     response.setContentType("application/json");
