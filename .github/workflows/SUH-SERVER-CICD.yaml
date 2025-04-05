@@ -35,11 +35,16 @@ jobs:
       - name: Docker 빌드환경 설정
         uses: docker/setup-buildx-action@v3
 
+      - name: Debug Secrets #FIXME: 삭제필요, action 로그에서 삭제 필요
+        run: |
+          echo "Username: ${{ secrets.SUH_DOCKERHUB_USERNAME }}"
+          echo "Token is set: ${{ secrets.SUH_DOCKERHUB_TOKEN != '' }}"
+
       - name: DockerHub 로그인
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.SUH_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.SUH_DOCKERHUB_TOKEN }}
 
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -55,7 +60,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/freemates-back-container:${{ github.ref_name }}
+          tags: ${{ secrets.SUH_DOCKERHUB_USERNAME }}/freemates-back-container:${{ github.ref_name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
@@ -71,16 +76,16 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
+          host: ${{ secrets.SUH_SERVER_HOST }}
+          username: ${{ secrets.SUH_SERVER_USER }}
+          password: ${{ secrets.SUH_SERVER_PASSWORD }}
           port: 2022
           script: |
             set -e
             
             echo "환경변수 설정.."
             export PATH=$PATH:/usr/local/bin
-            export PW=${{ secrets.SERVER_PASSWORD }}
+            export PW=${{ secrets.SUH_SERVER_PASSWORD }}
             BRANCH=${{ github.ref_name }}
             PORT=8080
             CONTAINER_NAME="freemates-back"
@@ -96,8 +101,8 @@ jobs:
             echo "컨테이너 이름: $CONTAINER_NAME"
             echo "포트: $PORT"
             
-            echo "도커 이미지 풀 : ${{ secrets.DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}"
-            echo $PW | sudo -S docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}
+            echo "도커 이미지 풀 : ${{ secrets.SUH_DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}"
+            echo $PW | sudo -S docker pull ${{ secrets.SUH_DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}
             
             echo "컨테이너 $CONTAINER_NAME 존재 여부 확인 중..."
             if sudo docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
@@ -114,6 +119,6 @@ jobs:
               -e "SPRING_PROFILES_ACTIVE=suh" \
               -v /etc/localtime:/etc/localtime:ro \
               -v /volume1/projects/freemates:/mnt/freemates \
-              ${{ secrets.DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}
+              ${{ secrets.SUH_DOCKERHUB_USERNAME }}/freemates-back-container:${BRANCH}
             
             echo "배포가 성공적으로 완료되었습니다."
