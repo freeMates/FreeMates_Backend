@@ -1,7 +1,7 @@
 package jombi.freemates.model.dto;
 
 
-import jombi.freemates.model.postgres.UserEntity;
+import jombi.freemates.model.postgres.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-  private final UserEntity user;
+  private final Member member;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -21,12 +21,12 @@ public class CustomUserDetails implements UserDetails {
 
   @Override
   public String getPassword() {
-    return user.getPassword();
+    return member.getPassword();
   }
 
   @Override
   public String getUsername() {
-    return user.getUsername();
+    return member.getUsername();
   }
 
 }
