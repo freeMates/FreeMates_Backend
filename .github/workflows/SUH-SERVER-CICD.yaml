@@ -1,4 +1,4 @@
-name: FREEMATES-BE-CICD
+name: SUH-PROJECT-BE-CICD
 
 on:
   push:
