@@ -35,11 +35,6 @@ jobs:
       - name: Docker 빌드환경 설정
         uses: docker/setup-buildx-action@v3
 
-      - name: Debug Secrets #FIXME: 삭제필요, action 로그에서 삭제 필요
-        run: |
-          echo "Username: ${{ secrets.SUH_DOCKERHUB_USERNAME }}"
-          echo "Token is set: ${{ secrets.SUH_DOCKERHUB_TOKEN != '' }}"
-
       - name: DockerHub 로그인
         uses: docker/login-action@v3
         with:
@@ -91,10 +86,10 @@ jobs:
             CONTAINER_NAME="freemates-back"
             
             if [ "$BRANCH" == "main" ]; then
-              PORT=8091
+              PORT=8092
             elif [ "$BRANCH" == "test" ]; then
               CONTAINER_NAME="freemates-back-test"
-              PORT=8092
+              PORT=8093
             fi
             
             echo "브랜치: $BRANCH"
