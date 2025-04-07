@@ -74,7 +74,7 @@ jobs:
         run: |
           echo "$SERVER_KEY" > key.pem
           chmod 400 key.pem
-          ssh -v -i key.pem ubuntu@$SERVER_HOSTS "echo SSH 연결 성공"
+          ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i key.pem ubuntu@$SERVER_HOSTS "echo SSH 연결 성공"
         env:
           SERVER_KEY: ${{ secrets.SERVER_KEY }}
           SERVER_HOSTS: ${{ secrets.SERVER_HOSTS }}
