@@ -60,14 +60,4 @@ public class SwaggerConfig implements WebMvcConfigurer{
             )
         );
   }
-
-
-  // Swagger UI 리소스 핸들러 등록
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/docs/swagger**")
-        .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
-    registry.addResourceHandler("/docs/webjars/**")
-        .addResourceLocations("classpath:/META-INF/resources/webjars/");
-  }
 }

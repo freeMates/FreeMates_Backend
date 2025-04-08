@@ -19,11 +19,6 @@ public class SecurityUrls {
       "/v3/api-docs/**",              // Swagger API 문서
 
       // WEB
-      "/",                             // 관리자페이지 메인창
-      "/login",                        // 관리자페이지 로그인창
-      "/auth/login",                   // 관리자페이지 로그인창
-      "/admin/auth/login",             // 관리자페이지 로그인 API
-      "/error/**",                     // 관리자페이지 에러 페이지
 
       // Static Resources
       "/css/**",                       // CSS 파일
@@ -42,7 +37,6 @@ public class SecurityUrls {
    * 관리자 권한이 필요한 URL 패턴 목록
    */
   public static final List<String> ADMIN_PATHS = Arrays.asList(
-      "/admin/member/**",
-      "/admin/dashboard/**"
+      "/admin/**"
   );
 }
