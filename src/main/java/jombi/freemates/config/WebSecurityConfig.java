@@ -31,8 +31,7 @@ public class WebSecurityConfig {
     // LoginFilter 객체 생성
     LoginFilter loginFilter = new LoginFilter(jwtUtil, authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)));
     // 로그인 URL 설정
-    loginFilter.setFilterProcessesUrl("/api/login");
-
+    loginFilter.setFilterProcessesUrl("/api/auth/login");
     http
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
