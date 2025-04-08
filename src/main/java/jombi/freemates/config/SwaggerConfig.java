@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -18,17 +19,18 @@ import java.util.List;
     info = @Info(
         title = "FreeMate Server",
         description = """
-            서버입니다 야호야호야호
+            FreeMate Server API 문서
             """,
         version = "1.0v"
     ),
     servers = {
         @Server(url = "http://localhost:8080", description = "로컬 서버"),
-        @Server(url = "http://3.34.78.124:8087", description = "FreeMates 서버")
+        @Server(url = "http://3.34.78.124:8087", description = "FreeMates 서버"), //FIXME: 수정 필요
+        @Server(url = "http://suh-project.synology.me:8092", description = "SUH-PROJECT - FreeMates 서버")
     }
 )
 @Configuration
-public class SwaggerConfig {
+public class SwaggerConfig implements WebMvcConfigurer{
 
   @Bean
   public OpenAPI openAPI() {
@@ -50,8 +52,11 @@ public class SwaggerConfig {
                     .url("http://localhost:8080")
                     .description("로컬 서버"),
                 new io.swagger.v3.oas.models.servers.Server()
-                    .url("http://3.34.78.124:8087")
-                    .description("FreeMates 서버")
+                    .url("http://3.34.78.124:8087") //FIXME: 수정 필요
+                    .description("FreeMates 서버"),
+                new io.swagger.v3.oas.models.servers.Server()
+                    .url("http://suh-project.synology.me:8092")
+                    .description("SUH-PROJECT - FreeMates 서버")
             )
         );
   }

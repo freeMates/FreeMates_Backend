@@ -1,8 +1,9 @@
 package jombi.freemates.service;
 
 import jombi.freemates.model.dto.CustomUserDetails;
-import jombi.freemates.model.postgres.UserEntity;
-import jombi.freemates.repository.UserRepository;
+import jombi.freemates.repository.MemberRepository;
+import jombi.freemates.util.exception.CustomException;
+import jombi.freemates.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,19 +14,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-  private final UserRepository userRepository;
+  private final MemberRepository memberRepository;
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-    // DB에서 조회
-    UserEntity user = userRepository.findByUsername(username);
-
-    if (user != null) {
-      // UserDetails에 담아서 return 하면 AuthenticationManager가 검증함
-      return new CustomUserDetails(user);
-    }
-
-    return null;
+    // AuthenticationManager -> UserDetails 검증
+    return new CustomUserDetails(
+        memberRepository.findByUsername(username)
+            .orElseThrow(() -> new CustomException(ErrorCode.DUPLICATE_USERNAME)));
   }
 }
