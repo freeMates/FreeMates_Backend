@@ -14,17 +14,17 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class FreematesInitiation implements ApplicationRunner {
 
-	private final GithubIssueService githubIssueService;
+  private final GithubIssueService githubIssueService;
 
-	@Override
-	public void run(ApplicationArguments args) throws Exception {
-		LogUtil.lineLog("SERVER START");
-		LogUtil.lineLog("데이터 초기화 시작");
-		LocalDateTime startTime = LocalDateTime.now();
+  @Override
+  public void run(ApplicationArguments args) throws Exception {
+    LogUtil.lineLog("SERVER START");
+    LogUtil.lineLog("데이터 초기화 시작");
+    LocalDateTime startTime = LocalDateTime.now();
 
-		githubIssueService.syncGithubIssues();
+    githubIssueService.syncGithubIssues();
 
-		LogUtil.logServerInitDuration(startTime);
-		log.info("서버 데이터 초기화 및 업데이트 완료");
-	}
+    LogUtil.logServerInitDuration(startTime);
+    log.info("서버 데이터 초기화 및 업데이트 완료");
+  }
 }

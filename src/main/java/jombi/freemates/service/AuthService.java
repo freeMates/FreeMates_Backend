@@ -31,16 +31,12 @@ public class AuthService {
     }
 
     // 사용자 저장
-    Member savedMember = memberRepository.save(Member.builder()
-        .username(request.getUsername())
-        .password(bCryptPasswordEncoder.encode(request.getPassword()))
-        .build());
+    Member savedMember = memberRepository.save(
+        Member.builder().username(request.getUsername()).password(bCryptPasswordEncoder.encode(request.getPassword()))
+            .build());
 
     log.info("회원가입 완료");
-    return RegisterResponse.builder()
-        .username(savedMember.getUsername())
-        .memberId(savedMember.getMemberId())
-        .build();
+    return RegisterResponse.builder().username(savedMember.getUsername()).memberId(savedMember.getMemberId()).build();
   }
 
   //TODO: 로그인 로직 (JWT 발급)

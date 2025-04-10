@@ -18,7 +18,8 @@ public class CustomOperationCustomizer implements OperationCustomizer {
 
   @Override
   public Operation customize(Operation operation, HandlerMethod handlerMethod) {
-    MergedAnnotations annotations = MergedAnnotations.from(handlerMethod.getMethod(), MergedAnnotations.SearchStrategy.TYPE_HIERARCHY);
+    MergedAnnotations annotations = MergedAnnotations.from(handlerMethod.getMethod(),
+        MergedAnnotations.SearchStrategy.TYPE_HIERARCHY);
     MergedAnnotation<ApiChangeLogs> apiChangeLogsAnnotation = annotations.get(ApiChangeLogs.class);
 
     if (apiChangeLogsAnnotation.isPresent()) {

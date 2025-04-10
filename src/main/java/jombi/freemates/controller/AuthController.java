@@ -41,19 +41,19 @@ public class AuthController {
   @Operation(
       summary = "회원가입",
       description = """
-      ## 인증(JWT): **불필요**
-      
-      ## 요청 파라미터 (RegisterRequest)
-      - **`username`**: 회원 ID
-      - **`password`**: 회원 비밀번호
-
-      ## 반환값 (RegisterResponse)
-      - **`username`**: 회원 ID
-      - **`memberId`**: 회원 고유 ID
-
-      ## 에러코드
-      - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
-      """
+          ## 인증(JWT): **불필요**
+          
+          ## 요청 파라미터 (RegisterRequest)
+          - **`username`**: 회원 ID
+          - **`password`**: 회원 비밀번호
+          
+          ## 반환값 (RegisterResponse)
+          - **`username`**: 회원 ID
+          - **`memberId`**: 회원 고유 ID
+          
+          ## 에러코드
+          - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
+          """
   )
 
   @PostMapping("/register")
@@ -80,23 +80,23 @@ public class AuthController {
   @Operation(
       summary = "로그인",
       description = """
-      ## 인증(JWT): **불필요**
-      
-      ## 요청 파라미터 (LoginRequest)
-      - **`username`**: 회원 ID
-      - **`password`**: 회원 비밀번호
-      
-      ## 반환값 (LoginResponse)
-      - **`accessToken`**: 발급된 AccessToken
-      - **`refreshToken`**: 발급된 RefreshToken
-      - **`memberId`**: 회원 고유 ID
-      - **`username`**: 회원 ID
-      
-      ## 에러코드
-      - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
-      - **`INVALID_CREDENTIALS`**: 유효하지 않은 자격 증명입니다.
-      - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
-      """
+          ## 인증(JWT): **불필요**
+          
+          ## 요청 파라미터 (LoginRequest)
+          - **`username`**: 회원 ID
+          - **`password`**: 회원 비밀번호
+          
+          ## 반환값 (LoginResponse)
+          - **`accessToken`**: 발급된 AccessToken
+          - **`refreshToken`**: 발급된 RefreshToken
+          - **`memberId`**: 회원 고유 ID
+          - **`username`**: 회원 ID
+          
+          ## 에러코드
+          - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
+          - **`INVALID_CREDENTIALS`**: 유효하지 않은 자격 증명입니다.
+          - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
+          """
   )
   @PostMapping("/login")
   @LogMethodInvocation

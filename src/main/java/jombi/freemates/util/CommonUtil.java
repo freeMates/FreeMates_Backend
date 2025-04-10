@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonUtil {
+
   private static final Faker faker = new Faker();
 
   public static String getRandomName() {
@@ -89,7 +90,7 @@ public class CommonUtil {
   /**
    * Validation 검증 : Object 값 -> null , Object가 문자열인 경우 -> 비어있으면 예외 발생
    *
-   * @param value 검증할 값 (String인 경우 빈 문자열 체크 포함)
+   * @param value   검증할 값 (String인 경우 빈 문자열 체크 포함)
    * @param message 에러 메시지
    */
   public static void checkNotNullOrEmpty(Object value, String message) {
@@ -97,7 +98,7 @@ public class CommonUtil {
       log.error(message);
       throw new CustomException(ErrorCode.INVALID_REQUEST);
     }
-    if (value instanceof String && ((String)value).isEmpty()) {
+    if (value instanceof String && ((String) value).isEmpty()) {
       log.error(message);
       throw new CustomException(ErrorCode.INVALID_REQUEST);
     }

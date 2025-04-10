@@ -29,7 +29,8 @@ public class WebSecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     // LoginFilter 객체 생성
-    LoginFilter loginFilter = new LoginFilter(jwtUtil, authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)));
+    LoginFilter loginFilter = new LoginFilter(jwtUtil,
+        authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)));
     // 로그인 URL 설정
     loginFilter.setFilterProcessesUrl("/api/auth/login");
     http

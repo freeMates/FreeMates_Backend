@@ -70,7 +70,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     cookie.setHttpOnly(true); // HttpOnly 설정
     cookie.setSecure(true);
     cookie.setPath("/");
-    cookie.setMaxAge((int) (JwtTokenType.REFRESH.getDurationMilliseconds() / 1000)); // 쿠키 maxAge는 초 단위 이므로, 밀리초를 1000으로 나눔
+    cookie.setMaxAge(
+        (int) (JwtTokenType.REFRESH.getDurationMilliseconds() / 1000)); // 쿠키 maxAge는 초 단위 이므로, 밀리초를 1000으로 나눔
     response.addCookie(cookie);
 
     response.setContentType("application/json");
