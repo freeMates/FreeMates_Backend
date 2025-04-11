@@ -33,6 +33,7 @@ public class WebSecurityConfig {
         authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)));
     // 로그인 URL 설정
     loginFilter.setFilterProcessesUrl("/api/auth/login");
+
     http
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

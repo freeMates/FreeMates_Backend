@@ -5,6 +5,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.util.JwtUtil;
@@ -31,7 +34,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {
-
     // 클라이언트 요청에서 username, password 추출
     try {
       // 요청 본문에서 JSON 데이터를 파싱

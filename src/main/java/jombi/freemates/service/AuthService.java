@@ -1,13 +1,23 @@
 package jombi.freemates.service;
 
+import jombi.freemates.model.constant.JwtTokenType;
+import jombi.freemates.model.dto.LoginRequest;
+import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.postgres.Member;
+import jombi.freemates.util.JwtUtil;
+import jombi.freemates.util.LogUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import jombi.freemates.repository.MemberRepository;
+import jombi.freemates.util.filter.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +28,9 @@ public class AuthService {
 
   private final MemberRepository memberRepository;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  private final AuthenticationManager authenticationManager;
+  private final JwtUtil jwtUtil;
+
 
   /**
    * 회원가입
@@ -32,12 +45,36 @@ public class AuthService {
 
     // 사용자 저장
     Member savedMember = memberRepository.save(
-        Member.builder().username(request.getUsername()).password(bCryptPasswordEncoder.encode(request.getPassword()))
+        Member.builder()
+            .username(request.getUsername())
+            .password(bCryptPasswordEncoder.encode(request.getPassword()))
             .build());
 
     log.info("회원가입 완료");
     return RegisterResponse.builder().username(savedMember.getUsername()).memberId(savedMember.getMemberId()).build();
   }
 
-  //TODO: 로그인 로직 (JWT 발급)
+  /**
+   * 로그인
+   */
+  public LoginResponse login(LoginRequest request) {
+    // 1. 로그인 필터 attemptAuthentication에서 나온 authenticationManager를 만들어서 확인하기
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
+    );
+    //2. 토큰 생성
+    // AccessToken 발급
+    String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
+    // RefreshToken 발급
+    String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
+
+    //3. 토큰 발급 후 username으로 닉네임찾아오기
+    Member member = memberRepository.findByUsername(request.getUsername()).orElseThrow(
+        ()->new UsernameNotFoundException("사용자를 찾을 수 없습니다")
+    );
+    //4.토큰 반환
+    return new LoginResponse(accessToken,refreshToken,member.getNickname());
+  }
+
+
 }
