@@ -30,7 +30,7 @@ import java.util.List;
     }
 )
 @Configuration
-public class SwaggerConfig implements WebMvcConfigurer{
+public class SwaggerConfig implements WebMvcConfigurer {
 
   @Bean
   public OpenAPI openAPI() {

@@ -25,12 +25,12 @@ public class JwtUtil {
   private String secretKey;
 
   // 2025.02.09 : jwtToken 만료시간 ENUM Handling 으로 변경
-//  @Value("${jwt.access-exp-time}")
-//  private long accessTokenValidityInMilliseconds;
-//
-//  // refresh 토큰 만료 시간 (밀리초)
-//  @Value("${jwt.refresh-exp-time}")
-//  private long refreshTokenValidityInMilliseconds;
+  @Value("${jwt.access-exp-time}")
+  private long accessTokenValidityInMilliseconds;
+
+  // refresh 토큰 만료 시간 (밀리초)
+  @Value("${jwt.refresh-exp-time}")
+  private long refreshTokenValidityInMilliseconds;
 
   @Value("${jwt.issuer}")
   private String issuer;
