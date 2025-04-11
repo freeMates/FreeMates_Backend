@@ -62,22 +62,24 @@ public class AuthService {
    * 로그인
    */
   public LoginResponse login(LoginRequest request) {
-    // 1. authenticationManager를 만든다
+    // Authentication 생성
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
     );
 
-    //2. 토큰 생성
+    // Member 추출
+    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    Member member = userDetails.getMember();
+
+    //토큰 생성
     // AccessToken 발급
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
-    //3. userdetail에서 가져오기
-    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-    Member member = userDetails.getMember();
 
-    //4.토큰 반환
+
+    //토큰 반환
     return LoginResponse.builder()
         .accessToken(accessToken)
         .refreshToken(refreshToken)
