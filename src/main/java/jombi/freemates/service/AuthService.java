@@ -1,6 +1,9 @@
 package jombi.freemates.service;
 
+import static jombi.freemates.util.LogUtil.superLogDebug;
+
 import jombi.freemates.model.constant.JwtTokenType;
+import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
@@ -11,7 +14,7 @@ import jombi.freemates.util.LogUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import jombi.freemates.repository.MemberRepository;
-import jombi.freemates.util.filter.LoginFilter;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -50,7 +54,7 @@ public class AuthService {
             .password(bCryptPasswordEncoder.encode(request.getPassword()))
             .build());
 
-    log.info("회원가입 완료");
+    superLogDebug(savedMember);
     return RegisterResponse.builder().username(savedMember.getUsername()).memberId(savedMember.getMemberId()).build();
   }
 
@@ -58,20 +62,21 @@ public class AuthService {
    * 로그인
    */
   public LoginResponse login(LoginRequest request) {
-    // 1. 로그인 필터 attemptAuthentication에서 나온 authenticationManager를 만들어서 확인하기
+    // 1. authenticationManager를 만든다
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
     );
+
     //2. 토큰 생성
     // AccessToken 발급
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
-    //3. 토큰 발급 후 username으로 닉네임찾아오기
-    Member member = memberRepository.findByUsername(request.getUsername()).orElseThrow(
-        ()->new UsernameNotFoundException("사용자를 찾을 수 없습니다")
-    );
+    //3. userdetail에서 가져오기
+    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    Member member = userDetails.getMember();
+
     //4.토큰 반환
     return new LoginResponse(accessToken,refreshToken,member.getNickname());
   }
