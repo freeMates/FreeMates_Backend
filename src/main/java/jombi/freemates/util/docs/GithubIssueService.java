@@ -59,8 +59,13 @@ public class GithubIssueService {
     String htmlContent = fetchGithubIssuePageContent(issueUrl);
     String rawTitle = getRawTitleFromGithubIssueHtml(htmlContent);
     String cleanTitle = processIssueTitle(rawTitle);
-    GithubIssue newIssue = GithubIssue.builder().issueNumber(issueNumber).rawTitle(rawTitle).cleanTitle(cleanTitle)
-        .pageUrl(issueUrl).build();
+    GithubIssue newIssue = GithubIssue
+        .builder()
+        .issueNumber(issueNumber)
+        .rawTitle(rawTitle)
+        .cleanTitle(cleanTitle)
+        .pageUrl(issueUrl)
+        .build();
     log.debug("새로운 이슈 {} 파싱 및 저장", issueNumber);
     return githubIssueRepository.save(newIssue);
   }
@@ -171,13 +176,20 @@ public class GithubIssueService {
       registry.setMessage("업데이트됨: " + LocalDateTime.now());
       hashRegistryRepository.save(registry);
     } else {
-      HashRegistry newRegistry = HashRegistry.builder().hashType(HashType.GITHUB_ISSUES).hashValue(newHash)
-          .message("생성됨: " + LocalDateTime.now()).build();
+      HashRegistry newRegistry = HashRegistry
+          .builder()
+          .hashType(HashType.GITHUB_ISSUES)
+          .hashValue(newHash)
+          .message("생성됨: " + LocalDateTime.now())
+          .build();
       hashRegistryRepository.save(newRegistry);
     }
   }
 
   public String getCurrentHash() {
-    return hashRegistryRepository.findByHashType(HashType.GITHUB_ISSUES).map(HashRegistry::getHashValue).orElse("");
+    return hashRegistryRepository
+        .findByHashType(HashType.GITHUB_ISSUES)
+        .map(HashRegistry::getHashValue)
+        .orElse("");
   }
 }

@@ -24,15 +24,6 @@ public class JwtUtil {
   @Value("${jwt.secret-key}")
   private String secretKey;
 
-  //value는 설정파일(yml)에 있는 값을 주입시킨다
-//  // 2025.02.09 : jwtToken 만료시간 ENUM Handling 으로 변경
-//  @Value("${jwt.access-exp-time}")
-//  private long accessTokenValidityInMilliseconds;
-//
-//  // refresh 토큰 만료 시간 (밀리초)
-//  @Value("${jwt.refresh-exp-time}")
-//  private long refreshTokenValidityInMilliseconds;
-
   @Value("${jwt.issuer}")
   private String issuer;
 
@@ -46,11 +37,6 @@ public class JwtUtil {
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
     String username = userDetails.getUsername();
     Date now = new Date();
-
-//    // 2025.02.09 : jwtToken 만료시간 ENUM Handling 으로 변경
-//    long duration = (jwtTokenType == JwtTokenType.ACCESS)
-//        ? accessTokenValidityInMilliseconds
-//        : refreshTokenValidityInMilliseconds;
 
     Date expiryDate = new Date(now.getTime() + jwtTokenType.getDurationMilliseconds());
 

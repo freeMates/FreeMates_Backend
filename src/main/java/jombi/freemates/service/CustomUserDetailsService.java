@@ -20,7 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     // AuthenticationManager -> UserDetails 검증
     return new CustomUserDetails(
-        memberRepository.findByUsername(username).orElseThrow(()
-            -> new CustomException(ErrorCode.DUPLICATE_USERNAME)));
+        memberRepository.findByUsername(username)
+            .orElseThrow(() -> new CustomException(ErrorCode.DUPLICATE_USERNAME)));
   }
 }

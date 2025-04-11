@@ -78,7 +78,11 @@ public class AuthService {
     Member member = userDetails.getMember();
 
     //4.토큰 반환
-    return new LoginResponse(accessToken,refreshToken,member.getNickname());
+    return LoginResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .nickname(member.getUsername())
+        .build();
   }
 
 
