@@ -4,7 +4,6 @@ import jombi.freemates.service.CustomUserDetailsService;
 import jombi.freemates.util.filter.CustomAuthenticationEntryPoint;
 import jombi.freemates.util.filter.JwtAuthenticationFilter;
 import jombi.freemates.util.JwtUtil;
-import jombi.freemates.util.filter.LoginFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,11 +27,7 @@ public class WebSecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    // LoginFilter 객체 생성
-    LoginFilter loginFilter = new LoginFilter(jwtUtil,
-        authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)));
-    // 로그인 URL 설정
-    loginFilter.setFilterProcessesUrl("/api/auth/login");
+
     http
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -48,8 +43,6 @@ public class WebSecurityConfig {
             .anyRequest().authenticated()
         );
 
-    // LoginFilter 추가
-    http.addFilter(loginFilter);
 
     // JWT 인증 필터 추가
     http.addFilterBefore(

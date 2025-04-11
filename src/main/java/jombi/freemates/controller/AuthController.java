@@ -65,6 +65,12 @@ public class AuthController {
 
   @ApiChangeLogs({
       @ApiChangeLog(
+          date = "2025-04-11",
+          author = Author.LEEDAYE,
+          issueNumber = 37,
+          description = "로그인 API 구현"
+      ),
+      @ApiChangeLog(
           date = "2025-04-08",
           author = Author.SUHSAECHAN,
           issueNumber = 32,
@@ -89,8 +95,7 @@ public class AuthController {
           ## 반환값 (LoginResponse)
           - **`accessToken`**: 발급된 AccessToken
           - **`refreshToken`**: 발급된 RefreshToken
-          - **`memberId`**: 회원 고유 ID
-          - **`username`**: 회원 ID
+          - **`nickName`**: 회원 닉네임
           
           ## 에러코드
           - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
@@ -100,9 +105,8 @@ public class AuthController {
   )
   @PostMapping("/login")
   @LogMethodInvocation
-  public ResponseEntity<LoginResponse> login(
-      @RequestBody LoginRequest request) {
-    return ResponseEntity.ok().build();
+  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    return ResponseEntity.ok(authService.login(request));
   }
 
 
