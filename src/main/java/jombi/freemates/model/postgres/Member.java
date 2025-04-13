@@ -2,6 +2,7 @@ package jombi.freemates.model.postgres;
 
 import jakarta.persistence.*;
 import java.util.UUID;
+import jombi.freemates.model.constant.Gender;
 import jombi.freemates.model.constant.Role;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -26,10 +27,11 @@ public class Member extends BasePostgresEntity {
 
   private Integer birthYear;
 
-  private Integer gender;
+  private Gender gender;
 
-  private Long phone;
-
+  @Column(nullable = false)
+  private String phone;
+  @Column(nullable = false)
   private String nickname;
 
   private Role role;
