@@ -53,7 +53,7 @@ public class AuthService {
         Member.builder()
             .username(request.getUsername())
             .password(bCryptPasswordEncoder.encode(request.getPassword()))
-            .phone(request.getPhone())
+            .email(request.getEmail())
             .birthYear(request.getBirthYear())
             .gender(request.getGender())
             .nickname(request.getNickname())

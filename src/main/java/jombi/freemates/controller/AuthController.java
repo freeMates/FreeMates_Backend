@@ -65,6 +65,12 @@ public class AuthController {
 
   @ApiChangeLogs({
       @ApiChangeLog(
+          date = "2025-04-13",
+          author = Author.LEEDAYE,
+          issueNumber = 42,
+          description = "회원가입시 받을 정보 추가현"
+      ),
+      @ApiChangeLog(
           date = "2025-04-11",
           author = Author.LEEDAYE,
           issueNumber = 37,
@@ -91,11 +97,15 @@ public class AuthController {
           ## 요청 파라미터 (LoginRequest)
           - **`username`**: 회원 ID
           - **`password`**: 회원 비밀번호
+          - **`nickname`**: 회원 닉네입
+          - **`email`**: 회원 이메일
+          - **`gender`**: 회원 성별
+          - **`birthYear`**: 회원 태어난 년도
           
           ## 반환값 (LoginResponse)
           - **`accessToken`**: 발급된 AccessToken
           - **`refreshToken`**: 발급된 RefreshToken
-          - **`nickName`**: 회원 닉네임
+          - **`nickname`**: 회원 닉네임
           
           ## 에러코드
           - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.

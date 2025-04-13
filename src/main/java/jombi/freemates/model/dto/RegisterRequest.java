@@ -22,7 +22,7 @@ public class RegisterRequest {
 
   private Gender gender;
 
-  private String phone;
+  private String email;
 
   private String nickname;
 

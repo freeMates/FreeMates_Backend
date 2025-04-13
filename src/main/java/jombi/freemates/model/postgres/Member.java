@@ -30,7 +30,7 @@ public class Member extends BasePostgresEntity {
   private Gender gender;
 
   @Column(nullable = false)
-  private String phone;
+  private String email;
   @Column(nullable = false)
   private String nickname;
 
