@@ -39,7 +39,5 @@ public class SecurityUrls {
   /**
    * 관리자 권한이 필요한 URL 패턴 목록
    */
-  public static final List<String> ADMIN_PATHS = Arrays.asList(
-      "/admin/**"
-  );
+  public static final List<String> ADMIN_PATHS = Arrays.asList("/admin/**");
 }

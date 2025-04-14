@@ -59,7 +59,8 @@ public class GithubIssueService {
     String htmlContent = fetchGithubIssuePageContent(issueUrl);
     String rawTitle = getRawTitleFromGithubIssueHtml(htmlContent);
     String cleanTitle = processIssueTitle(rawTitle);
-    GithubIssue newIssue = GithubIssue.builder()
+    GithubIssue newIssue = GithubIssue
+        .builder()
         .issueNumber(issueNumber)
         .rawTitle(rawTitle)
         .cleanTitle(cleanTitle)
@@ -175,7 +176,8 @@ public class GithubIssueService {
       registry.setMessage("업데이트됨: " + LocalDateTime.now());
       hashRegistryRepository.save(registry);
     } else {
-      HashRegistry newRegistry = HashRegistry.builder()
+      HashRegistry newRegistry = HashRegistry
+          .builder()
           .hashType(HashType.GITHUB_ISSUES)
           .hashValue(newHash)
           .message("생성됨: " + LocalDateTime.now())
@@ -185,7 +187,8 @@ public class GithubIssueService {
   }
 
   public String getCurrentHash() {
-    return hashRegistryRepository.findByHashType(HashType.GITHUB_ISSUES)
+    return hashRegistryRepository
+        .findByHashType(HashType.GITHUB_ISSUES)
         .map(HashRegistry::getHashValue)
         .orElse("");
   }

@@ -26,6 +26,12 @@ public class AuthController {
 
   @ApiChangeLogs({
       @ApiChangeLog(
+          date = "2025-04-13",
+          author = Author.LEEDAYE,
+          issueNumber = 42,
+          description = "회원가입시 받을 정보 추가"
+      ),
+      @ApiChangeLog(
           date = "2025-04-08",
           author = Author.SUHSAECHAN,
           issueNumber = 32,
@@ -41,19 +47,23 @@ public class AuthController {
   @Operation(
       summary = "회원가입",
       description = """
-      ## 인증(JWT): **불필요**
-      
-      ## 요청 파라미터 (RegisterRequest)
-      - **`username`**: 회원 ID
-      - **`password`**: 회원 비밀번호
-
-      ## 반환값 (RegisterResponse)
-      - **`username`**: 회원 ID
-      - **`memberId`**: 회원 고유 ID
-
-      ## 에러코드
-      - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
-      """
+          ## 인증(JWT): **불필요**
+          
+          ## 요청 파라미터 (RegisterRequest)
+          - **`username`**: 회원 ID
+          - **`password`**: 회원 비밀번호
+          - **`nickname`**: 회원 닉네입
+          - **`email`**: 회원 이메일
+          - **`gender`**: 회원 성별 (gender 로 MALE, FEMALE 로 받아야함)
+          - **`birthYear`**: 회원 태어난 년도
+          
+          ## 반환값 (RegisterResponse)
+          - **`username`**: 회원 ID
+          - **`memberId`**: 회원 고유 ID
+          
+          ## 에러코드
+          - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
+          """
   )
 
   @PostMapping("/register")
@@ -63,7 +73,18 @@ public class AuthController {
     return ResponseEntity.ok(authService.register(request));
   }
 
+  /**
+   * 로그인
+   * **/
+
   @ApiChangeLogs({
+
+      @ApiChangeLog(
+          date = "2025-04-11",
+          author = Author.LEEDAYE,
+          issueNumber = 37,
+          description = "로그인 API 구현"
+      ),
       @ApiChangeLog(
           date = "2025-04-08",
           author = Author.SUHSAECHAN,
@@ -80,29 +101,28 @@ public class AuthController {
   @Operation(
       summary = "로그인",
       description = """
-      ## 인증(JWT): **불필요**
-      
-      ## 요청 파라미터 (LoginRequest)
-      - **`username`**: 회원 ID
-      - **`password`**: 회원 비밀번호
-      
-      ## 반환값 (LoginResponse)
-      - **`accessToken`**: 발급된 AccessToken
-      - **`refreshToken`**: 발급된 RefreshToken
-      - **`memberId`**: 회원 고유 ID
-      - **`username`**: 회원 ID
-      
-      ## 에러코드
-      - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
-      - **`INVALID_CREDENTIALS`**: 유효하지 않은 자격 증명입니다.
-      - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
-      """
+          ## 인증(JWT): **불필요**
+          
+          ## 요청 파라미터 (LoginRequest)
+          - **`username`**: 회원 ID
+          - **`password`**: 회원 비밀번호
+
+          
+          ## 반환값 (LoginResponse)
+          - **`accessToken`**: 발급된 AccessToken
+          - **`refreshToken`**: 발급된 RefreshToken
+          - **`nickname`**: 회원 닉네임
+          
+          ## 에러코드
+          - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
+          - **`INVALID_CREDENTIALS`**: 유효하지 않은 자격 증명입니다.
+          - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
+          """
   )
   @PostMapping("/login")
   @LogMethodInvocation
-  public ResponseEntity<LoginResponse> login(
-      @RequestBody LoginRequest request) {
-    return ResponseEntity.ok().build();
+  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    return ResponseEntity.ok(authService.login(request));
   }
 
 
