@@ -21,13 +21,18 @@ public class SecurityUrls {
       // WEB
       "/",                           // 기본 화면 > 로그인화면 리다이렉트
       "/login",                      // 로그인 화면
+      "/sign-up-step1",              // 회원가입 화면 - 1단계
+      "/sign-up-step2",              // 회원가입 화면 - 2단계
+      "/sign-up-step3",              // 회원가입 화면 - 3단계
+      "/sign-up-step4",              // 회원가입 화면 - 4단계
+      "/sign-up-step5",              // 회원가입 화면 - 5단계
 
       // Static Resources
+      "/static/**",                       // CSS 파일
       "/css/**",                       // CSS 파일
       "/fonts/**",                     // 폰트 파일
       "/images/**",                    // 이미지 파일
       "/js/**",                        // JS 파일
-      "/webjars/**",                   // Webjars 리소스 (Bootstrap, jQuery 등) 추가
       "/firebase-messaging-sw.js",
 
       // SEO

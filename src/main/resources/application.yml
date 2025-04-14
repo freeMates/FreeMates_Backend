@@ -24,9 +24,9 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   thymeleaf:
-    cache: false
     prefix: classpath:/templates/
     suffix: .html
+    mode: HTML
 
 springdoc:
   default-consumes-media-type: application/json;charset=UTF-8

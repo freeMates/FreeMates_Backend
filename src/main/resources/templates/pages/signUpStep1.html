@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/masterLayout}">
+<head>
+  <title>회원가입 - Step 1</title>
+</head>
+<body>
+<div layout:fragment="header" th:replace="~{fragments/header/signUpHeader :: signUpHeader(1)}"></div>
+
+<div layout:fragment="content" class="d-flex flex-column min-vh-100">
+  <h2 class="text-left mt-2 mb-3">계정 정보 입력</h2>
+  <form id="signup-form" class="mb-3">
+    <!-- 아이디 입력 -->
+    <div class="input-group mb-4 d-flex justify-content-center">
+      <input type="text" id="username" name="username" class="form-control" placeholder="아이디를 입력해주세요." required>
+    </div>
+
+    <!-- 비밀번호 입력 -->
+    <div class="input-group mb-4 d-flex justify-content-center">
+      <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력해주세요." required>
+    </div>
+
+    <!-- 비밀번호 확인 -->
+    <div class="input-group mb-4 d-flex justify-content-center">
+      <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" placeholder="비밀번호를 다시 입력해주세요." required>
+    </div>
+  </form>
+
+  <!-- 하단 1/5 위치에 버튼 배치를 위한 공간 -->
+  <div class="button-bottom">
+    <button type="button" class="btn-custom mx-auto" disabled>확인</button>
+  </div>
+
+  <script th:inline="javascript">
+    let timeout;
+    let usernameValid = false;
+    let passwordValid = false;
+
+    $(document).ready(function () {
+      // 초기화 (필요 시 추가)
+      // init();
+
+      // 데이터 초기화
+      initData();
+
+      // 이벤트 처리
+      eventHandler();
+    });
+
+    function initData() {
+      // 데이터 초기화 로직 (필요 시 추가)
+    }
+
+    function updateButtonState() {
+      if (usernameValid && passwordValid) {
+        $('.btn-custom').prop('disabled', false);
+      } else {
+        $('.btn-custom').prop('disabled', true);
+      }
+    }
+
+    function eventHandler() {
+      // 아이디 검증
+      $('#username').on('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+          $.ajax({
+            url: '/api/check-username',
+            method: 'POST',
+            data: { username: $('#username').val() },
+            success: function(response) {
+              if (response.available) {
+                usernameValid = true;
+                updateButtonState();
+              } else {
+                usernameValid = false;
+                updateButtonState();
+              }
+            },
+            error: function() {
+              // 서버 오류 처리
+              alert('서버 오류가 발생했습니다. 다시 시도해주세요.');
+              //FIXME: 임시 코드
+              usernameValid = true;
+              updateButtonState();
+            }
+          });
+        }, 1000);
+      });
+
+      // 비밀번호 검증
+      $('#password, #passwordConfirm').on('input', function() {
+        const password = $('#password').val();
+        const passwordConfirm = $('#passwordConfirm').val();
+
+        if (password.length > 0 && password === passwordConfirm) {
+          passwordValid = true;
+        } else {
+          passwordValid = false;
+        }
+
+        updateButtonState();
+      });
+
+      // 확인 버튼 클릭시 다음 단계로 이동
+      $('.btn-custom').click(function() {
+        // 아이디와 비밀번호 데이터 전송 또는 저장 로직 추가
+        // ...
+
+        window.location.href = '/sign-up-step3';
+      });
+    }
+  </script>
+</div>
+<div layout:fragment="footer"></div> <!-- 푸터 비활성화 -->
+</body>
+</html>
