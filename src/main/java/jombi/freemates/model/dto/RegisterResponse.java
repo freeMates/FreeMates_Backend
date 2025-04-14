@@ -9,7 +9,6 @@ import lombok.ToString;
 @ToString
 @Builder
 @Getter
-@ToString
 @AllArgsConstructor
 public class RegisterResponse {
 
