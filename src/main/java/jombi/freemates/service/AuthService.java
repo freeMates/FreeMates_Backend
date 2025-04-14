@@ -3,6 +3,7 @@ package jombi.freemates.service;
 import static jombi.freemates.util.LogUtil.superLogDebug;
 
 import jombi.freemates.model.constant.JwtTokenType;
+import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
@@ -52,6 +53,11 @@ public class AuthService {
         Member.builder()
             .username(request.getUsername())
             .password(bCryptPasswordEncoder.encode(request.getPassword()))
+            .email(request.getEmail())
+            .birthYear(request.getBirthYear())
+            .gender(request.getGender())
+            .nickname(request.getNickname())
+            .role(Role.ROLE_USER)
             .build());
 
     superLogDebug(savedMember);

@@ -1,5 +1,8 @@
 package jombi.freemates.model.dto;
 
+import jakarta.persistence.Column;
+import jombi.freemates.model.constant.Gender;
+import jombi.freemates.model.constant.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,4 +17,13 @@ public class RegisterRequest {
   private String username;
 
   private String password;
+
+  private Integer birthYear;
+
+  private Gender gender;
+
+  private String email;
+
+  private String nickname;
+
 }
