@@ -7,11 +7,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+@Builder
 @ToString
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class LoginResponse {
 
   private String accessToken;

@@ -23,6 +23,10 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
 
 springdoc:
   default-consumes-media-type: application/json;charset=UTF-8

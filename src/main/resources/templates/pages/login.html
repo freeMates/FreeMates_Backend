@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(
+                      '로그인 - FreeMates',
+                      ~{::content},
+                      false,
+                      false,
+                      'default',
+                      'default'
+                    )}">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="content" id="app-container">
+  <!-- 로고 -->
+  <div class="logo-container">
+    <img th:src="@{/images/loginLogo.png}" alt="FreeMates Logo" class="logo">
+  </div>
+
+  <!-- 입력 필드 -->
+  <form th:action="@{/api/auth/login}" method="post" class="login-page-form">
+    <div class="input-group">
+      <input type="text" id="username" name="username" placeholder="아이디를 입력해주세요." required>
+    </div>
+    <div class="input-group">
+      <input type="password" id="password" name="password" placeholder="비밀번호를 입력해주세요." required>
+    </div>
+    <button type="submit" class="login-btn">입장하기</button>
+  </form>
+
+  <!-- 링크 -->
+  <div class="links">
+    <a th:href="@{/find-id}">아이디 찾기</a>
+    <span>|</span>
+    <a th:href="@{/register}">회원가입</a>
+  </div>
+</div>
+</body>
+</html>
