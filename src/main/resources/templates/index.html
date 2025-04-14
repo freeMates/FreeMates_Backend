@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(
+                      title='Home',
+                      content=~{::content}
+                    )}">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="content" class="content">
+  <h1>FreeMates에 오신 것을 환영합니다!</h1>
+</div>
+</body>
+</html>

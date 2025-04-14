@@ -12,19 +12,22 @@ public class SecurityUrls {
       // API
       "/api/auth/register",              // 회원가입
       "/api/auth/login",               // 로그인
-      "/api/test/**",                  //FIXME: 테스트 API
+      "/api/temp/**",                  //FIXME: 테스트 API
 
       // Swagger
       "/docs/**",                      // Swagger UI
       "/v3/api-docs/**",              // Swagger API 문서
 
       // WEB
+      "/",                           // 기본 화면 > 로그인화면 리다이렉트
+      "/login",                      // 로그인 화면
 
       // Static Resources
       "/css/**",                       // CSS 파일
       "/fonts/**",                     // 폰트 파일
       "/images/**",                    // 이미지 파일
       "/js/**",                        // JS 파일
+      "/webjars/**",                   // Webjars 리소스 (Bootstrap, jQuery 등) 추가
       "/firebase-messaging-sw.js",
 
       // SEO
