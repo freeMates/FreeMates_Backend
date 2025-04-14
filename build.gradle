@@ -85,6 +85,9 @@ dependencies {
 
     // SMB
     implementation 'org.springframework.integration:spring-integration-smb:6.4.2'
+
+    //mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {
