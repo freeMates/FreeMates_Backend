@@ -7,16 +7,14 @@
 <header th:fragment="signUpHeader (step)">
   <div class="signup-header d-flex flex-column py-2 mb-3">
     <div class="d-flex align-items-center w-100">
-      <a th:href="${step > 1 ? '/sign-up-step' + (step - 1) : '/login'}" class="back-link">
+      <a href="#" class="back-link">
         <img th:src="@{/images/back.png}" alt="뒤로가기" class="back-icon" width="24" height="24">
       </a>
       <div class="step-indicator ms-auto me-auto">
-<!--        <span class="step-text" th:text="${step} + '/5'"></span>-->
-        <span>회원가입</span>
+        <!-- 제목 중앙 정렬필요 -->
+        <span></span>
       </div>
     </div>
-
-    <!-- Simplified progress indicator with more visible styling -->
     <div class="d-flex justify-content-center mt-3 mb-1 w-100">
       <div style="display: flex; gap: 8px; width: 80%;">
         <div th:each="i : ${#numbers.sequence(1, 5)}"
