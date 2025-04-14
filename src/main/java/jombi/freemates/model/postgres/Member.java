@@ -27,6 +27,7 @@ public class Member extends BasePostgresEntity {
 
   private Integer birthYear;
 
+  @Enumerated(EnumType.STRING)//MALE, FEMALE
   private Gender gender;
 
   @Column(nullable = false)
