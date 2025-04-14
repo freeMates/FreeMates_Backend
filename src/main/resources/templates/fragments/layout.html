@@ -1,28 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout (title, content)">
+      th:fragment="layout (title, content, showHeader=true, showFooter=true, headerType='default', footerType='default')">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${title}">FreeMates</title>
+  <title th:text="${title} ?: 'FreeMates'">FreeMates</title>
 
   <link rel="stylesheet" th:href="@{/css/default.css}">
   <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
   <script th:src="@{/webjars/jquery/3.7.1/jquery.min.js}"></script>
   <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
-  <script th:href="@{/js/common.js}"></script>
+  <script th:src="@{/js/common.js}"></script>
 </head>
 <body>
 <div class="container" id="app-container">
-  <!-- 공통 헤더 -->
-  <div th:insert="~{fragments/header :: header}"></div>
+  <!-- 공통 헤더 (조건부 삽입) -->
+  <div th:if="${showHeader}">
+    <!-- 기본 헤더 -->
+    <div th:if="${headerType == 'default'}" th:insert="~{fragments/header/header :: header}"></div>
+    <!-- 관리자 헤더 -->
+    <div th:if="${headerType == 'admin'}" th:insert="~{fragments/header/adminHeader :: adminHeader}"></div>
+  </div>
 
   <!-- 페이지별 콘텐츠 삽입 지점 -->
   <main th:insert="~{::content}"></main>
 
-  <!-- 공통 푸터 -->
-  <div th:insert="~{fragments/footer :: footer}"></div>
+  <!-- 공통 푸터 (조건부 삽입) -->
+  <div th:if="${showFooter}">
+    <!-- 기본 푸터 -->
+    <div th:if="${footerType == 'default'}" th:insert="~{fragments/footer/footer :: footer}"></div>
+    <!-- 관리자 푸터 -->
+    <div th:if="${footerType == 'admin'}" th:insert="~{fragments/footer/adminFooter :: adminFooter}"></div>
+  </div>
 </div>
 </body>
 </html>

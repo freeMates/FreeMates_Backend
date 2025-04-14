@@ -2,8 +2,12 @@
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/layout :: layout(
-                      title='로그인 - FreeMates',
-                      content=~{::content}
+                      '로그인 - FreeMates',
+                      ~{::content},
+                      false,
+                      false,
+                      'default',
+                      'default'
                     )}">
 <head>
   <meta charset="UTF-8">
@@ -12,7 +16,7 @@
 <div th:fragment="content" id="app-container">
   <!-- 로고 -->
   <div class="logo-container">
-    <img src="/images/loginLogo.png" alt="FreeMates Logo" class="logo">
+    <img th:src="@{/images/loginLogo.png}" alt="FreeMates Logo" class="logo">
   </div>
 
   <!-- 입력 필드 -->

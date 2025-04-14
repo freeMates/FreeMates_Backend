@@ -2,20 +2,20 @@
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/layout :: layout(
-                      title='Home - FreeMates',
+                      title='관리자 대시보드 - FreeMates',
                       content=~{::content},
                       showHeader=true,
                       showFooter=true,
-                      headerType='default',
-                      footerType='default'
+                      headerType='admin',
+                      footerType='admin'
                     )}">
 <head>
   <meta charset="UTF-8">
 </head>
 <body>
 <div th:fragment="content" id="app-container">
-  <h1>FreeMates에 오신 것을 환영합니다!</h1>
-  <p>메인 페이지 콘텐츠입니다.</p>
+  <h1>관리자 대시보드</h1>
+  <p>여기에 관리자용 콘텐츠가 표시됩니다.</p>
 </div>
 </body>
 </html>
