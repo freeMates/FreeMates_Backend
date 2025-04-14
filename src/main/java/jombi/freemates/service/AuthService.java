@@ -64,6 +64,7 @@ public class AuthService {
     return RegisterResponse.builder().username(savedMember.getUsername()).memberId(savedMember.getMemberId()).build();
   }
 
+
   /**
    * 로그인
    */
@@ -92,6 +93,7 @@ public class AuthService {
         .nickname(member.getUsername())
         .build();
   }
+
 
 
 }

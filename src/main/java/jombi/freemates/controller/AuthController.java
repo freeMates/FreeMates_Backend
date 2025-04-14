@@ -7,14 +7,18 @@ import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.service.AuthService;
+import jombi.freemates.service.MailService;
 import jombi.freemates.util.aspect.LogMethodInvocation;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
+  private final MailService mailService;
 
   @ApiChangeLogs({
       @ApiChangeLog(
@@ -118,6 +123,34 @@ public class AuthController {
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.login(request));
   }
+
+  //아이디찾기
+
+  //비밀번호 변경
+
+  /// 로그아웃
+
+  //이메일 전송
+  @GetMapping("mail/send")
+  public ResponseEntity<String> sendEmail(@RequestParam String mail) {
+    mailService.sendMail(mail);
+    return ResponseEntity.ok("메일 전송이 완료되었습니다");
+  }
+
+  //이메일 인증
+  @GetMapping("mail/verify")
+  public ResponseEntity<String> verifyEmail(@RequestParam String mail,@RequestParam Object code) {
+    boolean isVaild = mailService.validateCode(mail,code);
+    if(isVaild) {
+      return ResponseEntity.ok("인증이 완료되었습니다");
+    }else{
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증되지 않았습니다");
+    }
+
+  }
+
+
+
 
 
 }
