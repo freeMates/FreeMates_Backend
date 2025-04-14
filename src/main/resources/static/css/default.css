@@ -36,17 +36,18 @@ body {
 /* 입력 필드 스타일 (Bootstrap 기반) */
 .input-group input,
 .input-group select {
-  /* Rectangle 67 */
-  position: absolute;
-  width: 327px;
+  position: relative;
+  width: 100%;
+  max-width: 327px;
   height: 48px;
-
-  background: #FFFFFF;
-  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.16);
-  border-radius: 50px;
-
+  margin: 0 auto;
 }
 
+/* 입력 필드 위치 수정 */
+.input-group {
+  margin-bottom: 30px;
+  position: relative;
+}
 
 .input-group input::placeholder,
 .input-group select::placeholder {
@@ -182,33 +183,42 @@ body {
   SignUp Page
 ==============================================
 */
-/* 타이머 스타일 */
-#timer {
-  font-size: 16px;
-  color: #FF0000;
-  margin-bottom: 16px;
-  text-align: center;
+/* 스텝 컨테이너 수정 */
+#signup-steps {
+  position: relative;
+  height: calc(100vh - 200px); /* 적절한 높이 설정 */
+  overflow: hidden;
 }
 
-/* 이메일 전송 버튼 스타일 */
-#sendEmailBtn {
-  border-radius: 50px;
-  font-size: 14px;
-  padding: 8px 16px;
-  background-color: #CCF6FF;
-  border: none;
+/* 스텝 요소 수정 */
+.step {
+  width: 100%;
+  padding: 20px 0;
 }
 
-#sendEmailBtn:hover {
-  background-color: #BCE5F0;
-}
-
+/* 버튼 위치 고정 */
 .button-bottom {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(100vh / 17); /* Position at bottom 1/6 of viewport height */
+  bottom: 40px; /* 적절한 아래쪽 여백 */
   text-align: center;
   z-index: 100;
-  padding: 0 10px;
+  padding: 0 20px;
+  background: #fff; /* 배경 추가 */
+}
+
+/* 입력 필드 위치 수정 */
+.input-group {
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.input-group input,
+.input-group select {
+  position: relative; /* absolute 대신 relative 사용 */
+  width: 100%;
+  max-width: 327px;
+  height: 48px;
+  margin: 0 auto;
 }
