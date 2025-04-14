@@ -88,12 +88,7 @@ dependencies {
 
     // Thymleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-
-    // Bootstrap
-    implementation 'org.webjars:bootstrap:5.3.3'
-
-    // Jquery
-    implementation 'org.webjars:jquery:3.7.1'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
 
 }
 

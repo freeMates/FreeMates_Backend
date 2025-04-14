@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/masterLayout}">
+<head>
+  <title>회원가입 - Step 5</title>
+</head>
+<body>
+<div layout:fragment="content">
+  <h2 class="text-center mb-4">성별 및 출생년도 입력</h2>
+  <form id="signup-step5-form">
+    <div class="input-group mb-3">
+      <select id="gender" name="gender" class="form-control" required>
+        <option value="" disabled selected>성별을 선택해주세요.</option>
+        <option value="male">남성</option>
+        <option value="female">여성</option>
+      </select>
+    </div>
+    <div class="input-group mb-3">
+      <input type="number" id="birthYear" name="birthYear" class="form-control" placeholder="출생년도를 입력해주세요 (예: 1990)" required>
+    </div>
+    <button type="button" class="btn btn-custom w-100" disabled>완료</button>
+  </form>
+
+  <script th:inline="javascript">
+    $(document).ready(function () {
+      // 초기화 (필요 시 추가)
+      // init();
+
+      // 데이터 초기화
+      initData();
+
+      // 이벤트 처리
+      eventHandler();
+    });
+
+    function initData() {
+      // 데이터 초기화 로직 (필요 시 추가)
+    }
+
+    function eventHandler() {
+      $('#gender, #birthYear').on('input change', function() {
+        if ($('#gender').val() && $('#birthYear').val().length === 4) {
+          $('.btn-custom').prop('disabled', false);
+        }
+      });
+    }
+  </script>
+</div>
+<div layout:fragment="footer"></div> <!-- 푸터 비활성화 -->
+</body>
+</html>

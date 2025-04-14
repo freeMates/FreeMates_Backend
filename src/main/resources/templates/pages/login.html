@@ -1,41 +1,58 @@
 <!DOCTYPE html>
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout(
-                      '로그인 - FreeMates',
-                      ~{::content},
-                      false,
-                      false,
-                      'default',
-                      'default'
-                    )}">
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/masterLayout}">
 <head>
-  <meta charset="UTF-8">
+  <title>로그인 - FreeMates</title>
 </head>
 <body>
-<div th:fragment="content" id="app-container">
+<div layout:fragment="header"></div> <!-- 헤더 비활성화 -->
+<div layout:fragment="content">
   <!-- 로고 -->
   <div class="logo-container">
     <img th:src="@{/images/loginLogo.png}" alt="FreeMates Logo" class="logo">
   </div>
 
   <!-- 입력 필드 -->
-  <form th:action="@{/api/auth/login}" method="post" class="login-page-form">
-    <div class="input-group">
-      <input type="text" id="username" name="username" placeholder="아이디를 입력해주세요." required>
+  <form th:action="@{/api/auth/login}" method="post">
+    <div class="input-group mb-3">
+      <input type="text" id="username" name="username" class="form-control" placeholder="아이디를 입력해주세요." required>
     </div>
-    <div class="input-group">
-      <input type="password" id="password" name="password" placeholder="비밀번호를 입력해주세요." required>
+    <div class="input-group mb-3">
+      <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력해주세요." required>
     </div>
-    <button type="submit" class="login-btn">입장하기</button>
+    <button type="submit" class="btn btn-custom w-100">입장하기</button>
   </form>
 
   <!-- 링크 -->
   <div class="links">
     <a th:href="@{/find-id}">아이디 찾기</a>
     <span>|</span>
-    <a th:href="@{/register}">회원가입</a>
+    <a th:href="@{/sign-up-step1}">회원가입</a>
   </div>
 </div>
+<div layout:fragment="footer"></div> <!-- 푸터 비활성화 -->
+
+<script th:inline="javascript">
+  $(document).ready(function () {
+    // 초기화 (필요 시 추가)
+    // init();
+
+    // 데이터 초기화
+    initData();
+
+    // 이벤트 처리
+    eventHandler();
+  });
+
+  function initData() {
+    // 데이터 초기화 로직 (필요 시 추가)
+  }
+
+  function eventHandler() {
+    // 이벤트 핸들러 로직 (필요 시 추가)
+  }
+</script>
 </body>
 </html>
