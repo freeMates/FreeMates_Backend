@@ -49,7 +49,7 @@ public class MailService {
   @Value("${mail.username}")
   private String from;
 
-  //메세지 만들기
+  // 메세지 만들기
   private MimeMessage createMessage(String mail, Object uuidObject) throws MessagingException {
     MimeMessage message = mailSender.createMimeMessage();
     message.setFrom(new InternetAddress(from));
@@ -74,23 +74,27 @@ public class MailService {
   public void sendEmail(String mail) {
 
     // 이메일 형식 검증
-    EmailValidator validator = EmailValidator.getInstance();
-    boolean isValid = validator.isValid(mail);
-    if (!isValid) {
+    EmailValidator emailValidator = EmailValidator.getInstance();
+    boolean isValidEmail = emailValidator.isValid(mail);
+    if (!isValidEmail) {
       throw new CustomException(ErrorCode.INVALID_EMAIL);
     }
 
-    boolean isExist = memberRepository.existsByEmail(mail);
-    if (isExist) {
+    // 중복 이메일 검증
+    boolean isEmailExist = memberRepository.existsByEmail(mail);
+    if (isEmailExist) {
       throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
     }
 
-    String uuidObject = CommonUtil.createCleanUUIDString();
+    // UUID 인증코드 생성
+    String uuidString = CommonUtil.createCleanUuidString();
 
-    //redis에 3분간 저장
-    redisTemplate.opsForValue().set("verify:" + mail, uuidObject, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
+    // Redis에 인증 코드 저장 (유효시간: 3분)
+    redisTemplate.opsForValue().set(EMAIL_CODE_PREFIX + mail, uuidString, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
+
+    // 메일 발송
     try {
-      MimeMessage message = createMessage(mail, uuidObject);
+      MimeMessage message = createMessage(mail, uuidString);
       mailSender.send(message);
     } catch (MessagingException e) {
       log.error("메일전송이 실패하였습니다", e);
@@ -101,36 +105,33 @@ public class MailService {
 
   // 이메일 코드 인증
   public String validateCode(String mail, String uuidString) {
-
     final String DEFAULT_FAIL_MESSAGE = "인증 코드가 유효하지 않거나 만료되었습니다.";
     final String DEFAULT_SUCCESS_MESSAGE = "인증이 완료되었습니다. 앱화면으로 돌아가 주세요";
 
     try {
-      // UUIDString이 null이 아닌지 확인
-      if (uuidString == null || uuidString.isEmpty()) {
-        throw new CustomException(ErrorCode.INVALID_REQUEST);
-      }
+      // Redis에서 인증 코드 조회
+      String redisKey = EMAIL_CODE_PREFIX + mail;
+      String savedUuidString = redisTemplate.opsForValue().get(redisKey);
 
-      // Redis에서 인증 코드 가져오기
-      String savedUuidString = String.valueOf(redisTemplate.opsForValue().get(EMAIL_CODE_PREFIX + mail));
+      // null 또는 "null" 문자열 처리
+      savedUuidString = CommonUtil.nvl(savedUuidString, "");
 
-      // 멤버 상태 갱신
-      boolean isValidEmailCode = savedUuidString != null && savedUuidString.equals(uuidString);
-
-      if (isValidEmailCode) {
-        // Redis에서 인증 코드 삭제
-        redisTemplate.delete(EMAIL_CODE_PREFIX + mail);
-      } else {
-        // 인증 실패 시 예외 던지기
-        log.error("인증 코드가 유효하지 않거나 만료되었습니다.");
+      // 인증 코드 검증
+      if (!savedUuidString.equals(uuidString)) {
+        log.error("이메일 인증 실패: 유효하지 않은 인증 코드 (email: {}, code: {})", mail, uuidString);
         return DEFAULT_FAIL_MESSAGE;
       }
 
-      // 성공 메시지 반환
-      return DEFAULT_SUCCESS_MESSAGE;
+      // 인증 성공 시 Redis에서 코드 삭제
+      redisTemplate.delete(redisKey);
+      log.info("이메일 인증 성공: {}", mail);
 
+      return DEFAULT_SUCCESS_MESSAGE;
+    } catch (CustomException e) {
+      log.error("이메일 인증 실패: {}", e.getMessage());
+      return DEFAULT_FAIL_MESSAGE;
     } catch (Exception e) {
-      log.error("메일 인증에 실패하였습니다", e);
+      log.error("이메일 인증 중 오류 발생", e);
       return DEFAULT_FAIL_MESSAGE;
     }
   }

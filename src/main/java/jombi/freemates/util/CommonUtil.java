@@ -20,11 +20,12 @@ public class CommonUtil {
   }
 
   /**
-   *
-   * 인증확인용 랜덤 uuid생성
+   * UUID 생성
+   * @return UUID 문자열
    */
-  public static String createCleanUUIDString() {
-    return String.valueOf(UUID.randomUUID());
+  public static String createCleanUuidString() {
+    // uuid 내부 "-" 삭제
+    return UUID.randomUUID().toString().replace("-", "");
   }
 
 
