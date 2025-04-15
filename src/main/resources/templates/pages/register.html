@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입 :: FreeMates</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/default.css}">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/common.js}"></script>
+  <style>
+    /* 회원가입 페이지 스타일 수정 */
+    #register-steps {
+      position: relative;
+      height: auto;
+      min-height: calc(100vh - 180px);
+      overflow: hidden;
+    }
+
+    .step {
+      position: absolute;
+      width: 100%;
+      padding: 20px 0;
+      transition: transform 0.5s ease;
+      transform: translateX(100%); /* 기본값은 오른쪽에 위치 */
+    }
+
+    .step.next {
+      transform: translateX(100%); /* 다음 단계 (오른쪽) */
+      z-index: 1;
+    }
+
+    .step.active {
+      transform: translateX(0); /* 현재 단계 (중앙) */
+      z-index: 3;
+    }
+
+    .step.prev {
+      transform: translateX(-100%); /* 이전 단계 (왼쪽) */
+      z-index: 2;
+    }
+
+    .input-group {
+      margin-bottom: 30px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+
+    .input-group input,
+    .input-group select {
+      position: relative;
+      width: 100%;
+      max-width: 327px;
+      height: 48px;
+    }
+
+    /* 버튼 위치 수정 - container 내부로 위치 조정 */
+    .button-bottom {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 40px;
+      text-align: center;
+      z-index: 100;
+      padding: 0;
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+    }
+
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #sendEmailBtn {
+      position: absolute;
+      right: 45px;
+      top: 8px;
+      z-index: 10;
+      border-radius: 20px;
+      font-size: 14px;
+      padding: 5px 10px;
+      background-color: #CCF6FF;
+      border: none;
+    }
+
+    #resendEmailBtn {
+      display: none;
+      color: #0099CC;
+      background: none;
+      border: none;
+      font-size: 14px;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-top: -20px;
+      margin-bottom: 20px;
+      text-align: right;
+      width: 327px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #timer {
+      text-align: center;
+      color: #FF0000;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .verification-section {
+      display: none;
+    }
+
+    /* 버튼 스타일 명시적 정의 */
+    .btn-custom {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 15px 20px;
+      gap: 10px;
+      width: 327px;
+      height: 48px;
+      margin: 0 auto;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    .btn-custom:enabled {
+      background: #CCF6FF;
+    }
+
+    .btn-custom:disabled {
+      background: #F4F4F4;
+    }
+
+    /* 약관 동의 스타일 */
+    .terms-container {
+      max-width: 327px;
+      margin: 0 auto;
+    }
+
+    .terms-box {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      height: 150px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .terms-checkbox {
+      margin-bottom: 15px;
+    }
+
+    .terms-checkbox label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .terms-checkbox input[type="checkbox"] {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .all-terms-checkbox {
+      font-weight: bold;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="master-layout-container">
+  <!-- 헤더 -->
+  <header>
+    <div class="register-header d-flex flex-column py-2 mb-3">
+      <div class="d-flex align-items-center w-100">
+        <a href="#" class="back-link">
+          <img th:src="@{/images/back.png}" alt="뒤로가기" class="back-icon" width="24" height="24">
+        </a>
+        <div class="step-indicator ms-auto me-auto">
+          <span>회원가입 1/3</span>
+        </div>
+      </div>
+      <div class="d-flex justify-content-center mt-3 mb-1 w-100">
+        <div style="display: flex; gap: 8px; width: 80%;">
+          <div th:each="i : ${#numbers.sequence(1, 3)}"
+               style="flex: 1; height: 8px; border-radius: 4px; background-color: #F4F4F4;"
+               th:id="'progress-' + ${i}">
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 컨텐츠 영역 -->
+  <main class="d-flex flex-column" style="padding-bottom: 100px; /* 버튼을 위한 여백 */">
+    <div id="register-steps">
+      <!-- Step 1: 이메일 & 패스워드 입력 + 이메일 인증 -->
+      <div class="step" id="step1">
+        <h2>계정 정보 입력</h2>
+        <form id="register-form-step1" class="mb-3">
+          <div class="input-group mb-3">
+            <input type="email" id="email" name="email" class="form-control" placeholder="이메일을 입력해주세요." required>
+            <button type="button" id="sendEmailBtn" class="btn">인증메일 발송</button>
+          </div>
+
+          <div class="verification-section">
+            <div id="timer" style="color: #FF0000; text-align: center; margin-bottom: 10px;">3:00</div>
+            <div class="input-group mb-3">
+              <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="인증 코드를 입력해주세요." required>
+            </div>
+            <button type="button" id="resendEmailBtn">인증메일 재발송</button>
+          </div>
+
+          <div class="input-group mb-4">
+            <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력해주세요." required>
+          </div>
+          <div class="input-group mb-4">
+            <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" placeholder="비밀번호를 다시 입력해주세요." required>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: 회원 정보 입력 (닉네임, 성별, 출생년도) -->
+      <div class="step" id="step2">
+        <h2>회원 정보 입력</h2>
+        <form id="register-form-step2">
+          <div class="input-group mb-4">
+            <input type="text" id="nickname" name="nickname" class="form-control" placeholder="닉네임을 입력해주세요." required>
+          </div>
+          <div class="input-group mb-4">
+            <select id="gender" name="gender" class="form-control" required>
+              <option value="" disabled selected>성별을 선택해주세요.</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+            </select>
+          </div>
+          <div class="input-group mb-4">
+            <input type="number" id="birthYear" name="birthYear" class="form-control" placeholder="출생년도를 입력해주세요 (예: 1990)" required>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 3: 개인정보 이용 동의 -->
+      <div class="step" id="step3">
+        <h2>개인정보 이용 동의</h2>
+        <div class="terms-container">
+          <div class="terms-checkbox all-terms-checkbox">
+            <label>
+              <input type="checkbox" id="all-terms">
+              <span>모든 약관에 동의합니다</span>
+            </label>
+          </div>
+
+          <div class="terms-checkbox">
+            <label>
+              <input type="checkbox" class="required-term" name="terms">
+              <span>이용약관 동의 (필수)</span>
+            </label>
+          </div>
+          <div class="terms-box">
+            제1조 (목적)<br>
+            이 약관은 FreeMates(이하 "회사"라 함)가 제공하는 모든 서비스(이하 "서비스"라 함)의 이용조건 및 절차, 회사와 회원 간의 권리, 의무, 책임사항과 기타 필요한 사항을 규정함을 목적으로 합니다.
+            <br><br>
+            제2조 (용어의 정의)<br>
+            이 약관에서 사용하는 용어의 정의는 다음과 같습니다.<br>
+            1. "서비스"란 회사가 제공하는 모든 서비스를 의미합니다.<br>
+            2. "회원"이란 회사와 서비스 이용계약을 체결하고 회원 아이디(ID)를 부여받은 자를 의미합니다.
+          </div>
+
+          <div class="terms-checkbox">
+            <label>
+              <input type="checkbox" class="required-term" name="privacy">
+              <span>개인정보 수집 및 이용 동의 (필수)</span>
+            </label>
+          </div>
+          <div class="terms-box">
+            1. 수집항목: 이메일 주소, 비밀번호, 닉네임, 성별, 출생년도<br>
+            2. 수집 및 이용목적: 회원제 서비스 제공, 본인 식별 및 인증<br>
+            3. 보유 및 이용기간: 회원 탈퇴 시까지 (단, 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관됩니다.)
+          </div>
+
+          <div class="terms-checkbox">
+            <label>
+              <input type="checkbox" name="marketing">
+              <span>마케팅 정보 수신 동의 (선택)</span>
+            </label>
+          </div>
+          <div class="terms-box">
+            FreeMates에서 제공하는 이벤트, 혜택 등 다양한 정보를 이메일로 받아보실 수 있습니다. 본 동의는 거부하실 수 있으며, 거부 시에도 서비스 이용에 제한이 없습니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 버튼 영역을 메인 외부로 이동 -->
+  <div class="button-bottom">
+    <button type="button" class="btn-custom" id="step1-btn" disabled>다음</button>
+    <button type="button" class="btn-custom" id="step2-btn" style="display: none;" disabled>다음</button>
+    <button type="button" class="btn-custom" id="step3-btn" style="display: none;" disabled>가입완료</button>
+  </div>
+</div>
+
+<!-- JavaScript 로직 -->
+<script th:inline="javascript">
+  let currentStep = 1;
+  const totalSteps = 3;
+  let emailVerified = false;
+  let passwordValid = false;
+  let timerInterval;
+
+  $(document).ready(function() {
+    // 초기 설정: 모든 스텝의 상태 설정
+    initializeSteps();
+
+    // 이벤트 핸들러 설정
+    setupEventHandlers();
+  });
+
+  function initializeSteps() {
+    // 모든 스텝을 보이게 하고 위치 초기화
+    $('.step').css('display', 'block');
+
+    // 첫 번째 스텝은 활성화, 나머지는 오른쪽에 배치
+    $('#step1').addClass('active');
+    $('#step2, #step3').addClass('next');
+
+    // 프로그레스바 초기화
+    updateProgressBar(1);
+  }
+
+  function updateProgressBar(step) {
+    // 프로그레스바 업데이트
+    for (let i = 1; i <= totalSteps; i++) {
+      if (i <= step) {
+        $('#progress-' + i).css('background-color', '#CCF6FF');
+      } else {
+        $('#progress-' + i).css('background-color', '#F4F4F4');
+      }
+    }
+
+    // 단계 표시 업데이트
+    $('.step-indicator span').text('회원가입 ' + step + '/' + totalSteps);
+
+    // 버튼 표시/숨김 처리
+    $('.btn-custom').hide();
+    $('#step' + step + '-btn').show();
+  }
+
+  function goToStep(newStep, direction) {
+    if (newStep < 1 || newStep > totalSteps) return;
+
+    const oldStep = currentStep;
+
+    if (direction > 0) {
+      // 다음 단계로 이동 (오른쪽에서 왼쪽으로)
+      $('#step' + oldStep).removeClass('active').addClass('prev');
+      $('#step' + newStep).removeClass('next').addClass('active');
+    } else {
+      // 이전 단계로 이동 (왼쪽에서 오른쪽으로)
+      $('#step' + oldStep).removeClass('active').addClass('next');
+      $('#step' + newStep).removeClass('prev').addClass('active');
+    }
+
+    // 현재 스텝 업데이트
+    currentStep = newStep;
+    updateProgressBar(newStep);
+  }
+
+  function setupEventHandlers() {
+    // 뒤로 가기 버튼
+    $('.back-link').click(function(e) {
+      e.preventDefault();
+      if (currentStep > 1) {
+        goToStep(currentStep - 1, -1); // -1은 이전으로 이동
+      } else {
+        window.location.href = '/login';
+      }
+    });
+
+    // 스텝 1: 이메일 인증 및 비밀번호 검증
+    $('#sendEmailBtn').click(function() {
+      const email = $('#email').val();
+      if (!email || !email.includes('@')) {
+        alert('유효한 이메일을 입력해주세요.');
+        return;
+      }
+
+      // 이메일 중복 확인 및 인증 메일 발송 (서버 통신 코드는 추가 필요)
+      alert('인증메일이 발송되었습니다. 이메일을 확인해주세요.');
+
+      // 인증 코드 입력 섹션 표시
+      $('.verification-section').show();
+      $('#sendEmailBtn').text('확인');
+
+      // 타이머 시작
+      startTimer();
+
+      // 재전송 버튼 표시
+      $('#resendEmailBtn').show();
+
+      // 인증 버튼 기능 변경
+      $(this).off('click').on('click', function() {
+        const verificationCode = $('#verificationCode').val();
+        if (!verificationCode) {
+          alert('인증 코드를 입력해주세요.');
+          return;
+        }
+
+        // 인증 코드 검증 (서버 통신 코드 추가 필요)
+        // 여기서는 임시로 성공 처리
+        emailVerified = true;
+        clearInterval(timerInterval);
+        $('#timer').text('인증 완료').css('color', '#0099CC');
+        $('#sendEmailBtn').prop('disabled', true).text('인증완료');
+        $('#resendEmailBtn').hide();
+
+        // 버튼 상태 업데이트
+        updateButtonState(1);
+      });
+    });
+
+    // 이메일 재전송 버튼
+    $('#resendEmailBtn').click(function() {
+      clearInterval(timerInterval);
+      startTimer();
+      alert('인증메일이 재발송되었습니다.');
+    });
+
+    // 비밀번호 유효성 검사
+    $('#password, #passwordConfirm').on('input', function() {
+      const password = $('#password').val();
+      const passwordConfirm = $('#passwordConfirm').val();
+      passwordValid = password.length >= 6 && password === passwordConfirm;
+      updateButtonState(1);
+    });
+
+    // 스텝 2: 회원 정보 입력 (닉네임, 성별, 출생년도)
+    $('#nickname, #gender, #birthYear').on('input change', function() {
+      const nicknameValid = $('#nickname').val().length > 0;
+      const genderSelected = $('#gender').val() !== null && $('#gender').val() !== "";
+      const birthYearValid = $('#birthYear').val().length === 4 &&
+          Number($('#birthYear').val()) >= 1900 &&
+          Number($('#birthYear').val()) <= new Date().getFullYear();
+
+      $('#step2-btn').prop('disabled', !(nicknameValid && genderSelected && birthYearValid));
+    });
+
+    // 스텝 3: 약관 동의
+    $('#all-terms').change(function() {
+      const isChecked = $(this).is(':checked');
+      $('input[name="terms"], input[name="privacy"], input[name="marketing"]').prop('checked', isChecked);
+      updateTermsButtonState();
+    });
+
+    $('.required-term').change(function() {
+      updateTermsButtonState();
+      // 모든 필수 약관이 체크되었는지 확인하여 전체 동의 체크박스 상태 업데이트
+      const allRequiredChecked = $('.required-term:checked').length === $('.required-term').length;
+      const marketingChecked = $('input[name="marketing"]').is(':checked');
+      $('#all-terms').prop('checked', allRequiredChecked && marketingChecked);
+    });
+
+    $('input[name="marketing"]').change(function() {
+      // 필수 약관 체크 상태와 마케팅 동의 체크 상태를 확인하여 전체 동의 체크박스 업데이트
+      const allRequiredChecked = $('.required-term:checked').length === $('.required-term').length;
+      const marketingChecked = $(this).is(':checked');
+      $('#all-terms').prop('checked', allRequiredChecked && marketingChecked);
+    });
+
+    // 다음 버튼 클릭
+    $('.btn-custom').click(function() {
+      if (currentStep < totalSteps) {
+        goToStep(currentStep + 1, 1); // 1은 다음으로 이동
+      } else {
+        // 회원가입 완료 처리
+        alert('회원가입이 완료되었습니다!');
+        window.location.href = '/login';
+      }
+    });
+  }
+
+  function updateButtonState(step) {
+    if (step === 1) {
+      $('#step1-btn').prop('disabled', !(emailVerified && passwordValid));
+    }
+  }
+
+  function updateTermsButtonState() {
+    // 필수 약관 모두 체크 시 버튼 활성화
+    const allRequiredChecked = $('.required-term:checked').length === $('.required-term').length;
+    $('#step3-btn').prop('disabled', !allRequiredChecked);
+  }
+
+  function startTimer() {
+    let time = 180; // 3분
+    clearInterval(timerInterval); // 기존 타이머가 있으면 제거
+
+    timerInterval = setInterval(function() {
+      let minutes = Math.floor(time / 60);
+      let seconds = time % 60;
+      $('#timer').text(minutes + ':' + (seconds < 10 ? '0' : '') + seconds);
+      time--;
+
+      if (time < 0) {
+        clearInterval(timerInterval);
+        $('#timer').text('시간 초과').css('color', '#FF0000');
+        $('#sendEmailBtn').text('재전송');
+        $('#sendEmailBtn').off('click').on('click', function() {
+          $('#timer').css('color', '#FF0000');
+          startTimer();
+          alert('인증메일이 재발송되었습니다.');
+          $(this).text('확인');
+
+          // 버튼 기능 다시 변경
+          $(this).off('click').on('click', function() {
+            const verificationCode = $('#verificationCode').val();
+            if (!verificationCode) {
+              alert('인증 코드를 입력해주세요.');
+              return;
+            }
+
+            // 인증 코드 검증 (서버 통신 코드 추가 필요)
+            // 여기서는 임시로 성공 처리
+            emailVerified = true;
+            clearInterval(timerInterval);
+            $('#timer').text('인증 완료').css('color', '#0099CC');
+            $('#sendEmailBtn').prop('disabled', true).text('인증완료');
+            $('#resendEmailBtn').hide();
+
+            // 버튼 상태 업데이트
+            updateButtonState(1);
+          });
+        });
+      }
+    }, 1000);
+  }
+</script>
+</body>
+</html>

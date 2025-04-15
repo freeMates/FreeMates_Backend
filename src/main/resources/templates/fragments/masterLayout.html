@@ -22,7 +22,7 @@
   <!-- 공통 헤더 -->
   <header layout:fragment="header">
     <div th:if="${headerType == 'default'}" th:insert="~{fragments/header/header :: header}"></div>
-    <div th:if="${headerType == 'signUp'}" th:insert="~{fragments/header/signUpHeader :: signUpHeader(${step})}"></div>
+    <div th:if="${headerType == 'signUp'}" th:insert="~{fragments/header/registerHeader :: registerHeader(${step})}"></div>
   </header>
 
   <!-- 컨텐츠 영역 -->
