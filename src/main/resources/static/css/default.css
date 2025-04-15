@@ -1,0 +1,224 @@
+/*
+static/css/default.css
+ */
+/*
+==============================================
+  Global Config
+==============================================
+*/
+/* SUIT 폰트 로드 */
+@font-face {
+  font-family: 'SUIT';
+  src: url('/fonts/SUIT/SUIT-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 기본 스타일 */
+body {
+  font-family: 'SUIT', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 컨테이너 스타일 (Bootstrap container 활용) */
+.master-layout-container {
+  max-width: 400px; /* 모바일 우선 설계 */
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/*
+==============================================
+  Common
+==============================================
+*/
+/* 입력 필드 스타일 (Bootstrap 기반) */
+.input-group input,
+.input-group select {
+  position: relative;
+  width: 100%;
+  max-width: 327px;
+  height: 48px;
+  margin: 0 auto;
+}
+
+/* 입력 필드 위치 수정 */
+.input-group {
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.input-group input::placeholder,
+.input-group select::placeholder {
+  color: #999;
+}
+
+/* 버튼 스타일 (Bootstrap 기반) */
+.btn-custom {
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 17px 24px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-custom:disabled {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 20px;
+  gap: 10px;
+
+  width: 327px;
+  height: 48px;
+
+  background: #F4F4F4;
+  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.16);
+  border-radius: 50px;
+}
+
+.btn-custom:enabled {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 20px;
+  gap: 10px;
+
+  width: 327px;
+  height: 48px;
+
+  background: #CCF6FF;
+  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.16);
+  border-radius: 50px;
+}
+
+/* 회원가입 헤더 스타일 */
+.signup-header {
+  position: relative;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.back-link {
+  padding: 8px;
+  color: #212529;
+  text-decoration: none;
+}
+
+.back-icon {
+  display: block;
+}
+
+.step-indicator {
+  font-size: 16px;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.back-btn {
+  font-size: 24px;
+  color: #000;
+  text-decoration: none;
+}
+
+.progress-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.progress-bar span {
+  font-size: 18px;
+  color: #ccc;
+}
+
+.progress-bar span.active {
+  color: #000;
+  font-weight: bold;
+}
+
+/*
+==============================================
+  Login Page
+==============================================
+*/
+/* 로고 스타일 */
+.logo-container {
+  text-align: center;
+  margin-bottom: 40px;
+  margin-top: 100px
+}
+
+.logo {
+  width: 200px;
+  height: auto;
+}
+
+/* 링크 스타일 */
+.links {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.links a {
+  color: #666;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+.links span {
+  color: #666;
+}
+
+/*
+==============================================
+  SignUp Page
+==============================================
+*/
+/* 스텝 컨테이너 수정 */
+#signup-steps {
+  position: relative;
+  height: calc(100vh - 200px); /* 적절한 높이 설정 */
+  overflow: hidden;
+}
+
+/* 스텝 요소 수정 */
+.step {
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* 버튼 위치 고정 */
+.button-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 40px; /* 적절한 아래쪽 여백 */
+  text-align: center;
+  z-index: 100;
+  padding: 0 20px;
+  background: #fff; /* 배경 추가 */
+}
+
+/* 입력 필드 위치 수정 */
+.input-group {
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.input-group input,
+.input-group select {
+  position: relative; /* absolute 대신 relative 사용 */
+  width: 100%;
+  max-width: 327px;
+  height: 48px;
+  margin: 0 auto;
+}

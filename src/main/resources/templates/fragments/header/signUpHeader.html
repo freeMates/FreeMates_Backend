@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<header th:fragment="signUpHeader (step)">
+  <div class="signup-header d-flex flex-column py-2 mb-3">
+    <div class="d-flex align-items-center w-100">
+      <a href="#" class="back-link">
+        <img th:src="@{/images/back.png}" alt="뒤로가기" class="back-icon" width="24" height="24">
+      </a>
+      <div class="step-indicator ms-auto me-auto">
+        <!-- 제목 중앙 정렬필요 -->
+        <span></span>
+      </div>
+    </div>
+    <div class="d-flex justify-content-center mt-3 mb-1 w-100">
+      <div style="display: flex; gap: 8px; width: 80%;">
+        <div th:each="i : ${#numbers.sequence(1, 5)}"
+             style="flex: 1; height: 8px; border-radius: 4px; background-color: #F4F4F4;"
+             th:style="${i <= step ? 'flex: 1; height: 8px; border-radius: 4px; background-color: #CCF6FF;' :
+                      'flex: 1; height: 8px; border-radius: 4px; background-color: #F4F4F4;'}">
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+</body>
+</html>
