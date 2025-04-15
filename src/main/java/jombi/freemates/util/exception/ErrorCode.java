@@ -22,6 +22,9 @@ public enum ErrorCode {
   DUPLICATE_USERNAME(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다"),
 
   PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
+
+  //이메일
+  INVALID_EMAIL(HttpStatus.BAD_REQUEST,"유효하지 않은 이메일입니다"),
   DUPLICATE_EMAIL(HttpStatus.CONFLICT,"이미 존재하는 이메일입니다.")
   ;
 

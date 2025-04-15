@@ -13,7 +13,7 @@ public class SecurityUrls {
       "/api/auth/register",              // 회원가입
       "/api/auth/login",               // 로그인
       "/api/test/**",                  //FIXME: 테스트 API
-      "/api/auth/mail/**",                   //이메일인증
+      "/api/mail/**",                   //이메일인증
       "/api/temp/**",                  //FIXME: 테스트 API
 
       // Swagger

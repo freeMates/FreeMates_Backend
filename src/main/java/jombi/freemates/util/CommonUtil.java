@@ -21,10 +21,9 @@ public class CommonUtil {
 
   /**
    *
-   * 인증확인용 url생성
+   * 인증확인용 랜덤 uuid생성
    */
-  //랜덤으로 숫자 생성
-  public static String creatUUID() {
+  public static String createCleanUUIDString() {
     return String.valueOf(UUID.randomUUID());
   }
 

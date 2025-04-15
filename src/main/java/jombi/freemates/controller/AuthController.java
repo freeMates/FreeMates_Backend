@@ -147,24 +147,7 @@ public class AuthController {
 
   // 로그아웃
 
-  @Async
-  //이메일 전송
-  @GetMapping("mail/send")
-  public ResponseEntity<String> sendEmail(@RequestParam String mail) {
-    mailService.sendEmail(mail);
-    return ResponseEntity.ok("메일 전송이 완료되었습니다");
-  }
 
-  //이메일 인증
-  @GetMapping("mail/verify")
-  public ResponseEntity<String> verifyEmail(@RequestParam String mail,@RequestParam Object uuid) {
-    boolean isValid = mailService.validateCode(mail, uuid);
-    if (isValid) {
-      return ResponseEntity.ok("인증이 완료되었습니다! 앱화면으로 돌아가주세요");
-    }else{
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
-
-  }
 
 
 
