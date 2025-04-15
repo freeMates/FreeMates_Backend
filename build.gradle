@@ -93,6 +93,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
 
+    //validation
+    implementation 'commons-validator:commons-validator:1.7'
+
 }
 
 tasks.named('test') {

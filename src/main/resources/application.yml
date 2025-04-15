@@ -34,5 +34,4 @@ springdoc:
   swagger-ui:
     path: /docs/swagger
 
-freemates:
-  host: ${SERVER_HOST}
+
