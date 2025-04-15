@@ -41,19 +41,46 @@
       z-index: 2;
     }
 
-    .input-group {
-      margin-bottom: 30px;
+    .form-group {
+      margin-bottom: 25px;
       position: relative;
-      display: flex;
-      justify-content: center;
+      max-width: 327px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .input-group input,
-    .input-group select {
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .input-wrapper {
       position: relative;
-      width: 100%;
-      max-width: 327px;
+    }
+
+    .form-control {
       height: 48px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      width: 100%;
+      padding: 0 15px;
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc3545;
+      background-image: none;
+      padding-right: 15px;
+    }
+
+    .invalid-feedback {
+      display: none;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 12px;
+      color: #dc3545;
     }
 
     /* 버튼 위치 수정 - container 내부로 위치 조정 */
@@ -78,9 +105,16 @@
       font-weight: bold;
     }
 
+    /* 이메일 인증 관련 스타일 수정 */
+    .email-verification-area {
+      margin-top: 10px;
+      padding-top: 5px;
+      border-top: 1px solid #f0f0f0;
+    }
+
     #sendEmailBtn {
       position: absolute;
-      right: 45px;
+      right: 10px;
       top: 8px;
       z-index: 10;
       border-radius: 20px;
@@ -90,31 +124,63 @@
       border: none;
     }
 
+    #verifyEmailBtn {
+      width: 100%;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #CCF6FF;
+      border: none;
+      font-weight: 600;
+      display: none;
+    }
+
+    .timer-container {
+      display: none;
+      text-align: center;
+      margin: 10px 0;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    #timer {
+      color: #FF0000;
+      font-weight: 600;
+    }
+
     #resendEmailBtn {
       display: none;
+      width: 100%;
       color: #0099CC;
       background: none;
       border: none;
       font-size: 14px;
       text-decoration: underline;
-      cursor: pointer;
-      margin-top: -20px;
-      margin-bottom: 20px;
-      text-align: right;
-      width: 327px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    #timer {
       text-align: center;
-      color: #FF0000;
-      font-size: 14px;
-      margin-bottom: 10px;
+      padding: 5px 0;
+      margin-top: 5px;
+      cursor: pointer;
     }
 
-    .verification-section {
+    .verification-status {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+      padding: 8px;
+      border-radius: 8px;
       display: none;
+    }
+
+    .verification-status.success {
+      color: #28a745;
+      background-color: #e8f5e9;
+    }
+
+    .verification-status.error {
+      color: #dc3545;
+      background-color: #fbe9e7;
     }
 
     /* 버튼 스타일 명시적 정의 */
@@ -214,24 +280,49 @@
       <div class="step" id="step1">
         <h2>계정 정보 입력</h2>
         <form id="register-form-step1" class="mb-3">
-          <div class="input-group mb-3">
-            <input type="email" id="email" name="email" class="form-control" placeholder="이메일을 입력해주세요." required>
-            <button type="button" id="sendEmailBtn" class="btn">인증메일 발송</button>
-          </div>
-
-          <div class="verification-section">
-            <div id="timer" style="color: #FF0000; text-align: center; margin-bottom: 10px;">3:00</div>
-            <div class="input-group mb-3">
-              <input type="text" id="verificationCode" name="verificationCode" class="form-control" placeholder="인증 코드를 입력해주세요." required>
+          <!-- 이메일 입력 및 인증 -->
+          <div class="form-group">
+            <label for="email" class="form-label">이메일</label>
+            <div class="input-wrapper">
+              <input type="email" id="email" name="email" class="form-control" placeholder="이메일을 입력해주세요." required>
+              <button type="button" id="sendEmailBtn" class="btn">인증메일 발송</button>
             </div>
-            <button type="button" id="resendEmailBtn">인증메일 재발송</button>
+            <div class="invalid-feedback" id="email-feedback">유효한 이메일 주소를 입력해주세요.</div>
+
+            <!-- 이메일 인증 관련 UI를 그룹화 -->
+            <div class="email-verification-area">
+              <div class="timer-container">
+                <span id="timer">3:00</span> 내에 이메일을 확인해주세요.
+              </div>
+
+              <button type="button" id="verifyEmailBtn" class="btn">인증 확인</button>
+              <button type="button" id="resendEmailBtn">인증메일 재발송</button>
+
+              <div class="verification-status success" id="verification-success">
+                이메일 인증이 완료되었습니다.
+              </div>
+              <div class="verification-status error" id="verification-error">
+                이메일 인증에 실패했습니다. 다시 시도해주세요.
+              </div>
+            </div>
           </div>
 
-          <div class="input-group mb-4">
-            <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력해주세요." required>
+          <!-- 비밀번호 입력 -->
+          <div class="form-group">
+            <label for="password" class="form-label">비밀번호</label>
+            <div class="input-wrapper">
+              <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력해주세요." required>
+            </div>
+            <div class="invalid-feedback" id="password-feedback">비밀번호는 최소 6자 이상이어야 합니다.</div>
           </div>
-          <div class="input-group mb-4">
-            <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" placeholder="비밀번호를 다시 입력해주세요." required>
+
+          <!-- 비밀번호 확인 입력 -->
+          <div class="form-group">
+            <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
+            <div class="input-wrapper">
+              <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" placeholder="비밀번호를 다시 입력해주세요." required>
+            </div>
+            <div class="invalid-feedback" id="passwordConfirm-feedback">비밀번호가 일치하지 않습니다.</div>
           </div>
         </form>
       </div>
@@ -240,18 +331,32 @@
       <div class="step" id="step2">
         <h2>회원 정보 입력</h2>
         <form id="register-form-step2">
-          <div class="input-group mb-4">
-            <input type="text" id="nickname" name="nickname" class="form-control" placeholder="닉네임을 입력해주세요." required>
+          <div class="form-group">
+            <label for="nickname" class="form-label">닉네임</label>
+            <div class="input-wrapper">
+              <input type="text" id="nickname" name="nickname" class="form-control" placeholder="닉네임을 입력해주세요." required>
+            </div>
+            <div class="invalid-feedback" id="nickname-feedback">닉네임을 입력해주세요.</div>
           </div>
-          <div class="input-group mb-4">
-            <select id="gender" name="gender" class="form-control" required>
-              <option value="" disabled selected>성별을 선택해주세요.</option>
-              <option value="male">남성</option>
-              <option value="female">여성</option>
-            </select>
+
+          <div class="form-group">
+            <label for="gender" class="form-label">성별</label>
+            <div class="input-wrapper">
+              <select id="gender" name="gender" class="form-control" required>
+                <option value="" disabled selected>성별을 선택해주세요.</option>
+                <option value="male">남성</option>
+                <option value="female">여성</option>
+              </select>
+            </div>
+            <div class="invalid-feedback" id="gender-feedback">성별을 선택해주세요.</div>
           </div>
-          <div class="input-group mb-4">
-            <input type="number" id="birthYear" name="birthYear" class="form-control" placeholder="출생년도를 입력해주세요 (예: 1990)" required>
+
+          <div class="form-group">
+            <label for="birthYear" class="form-label">출생년도</label>
+            <div class="input-wrapper">
+              <input type="number" id="birthYear" name="birthYear" class="form-control" placeholder="출생년도를 입력해주세요 (예: 1990)" required>
+            </div>
+            <div class="invalid-feedback" id="birthYear-feedback">유효한 출생년도를 입력해주세요 (1900-현재).</div>
           </div>
         </form>
       </div>
@@ -324,6 +429,7 @@
   let emailVerified = false;
   let passwordValid = false;
   let timerInterval;
+  let emailSent = false;
 
   $(document).ready(function() {
     // 초기 설정: 모든 스텝의 상태 설정
@@ -331,7 +437,28 @@
 
     // 이벤트 핸들러 설정
     setupEventHandlers();
+
+    // URL 파라미터에서 이메일 인증 상태 확인
+    checkEmailVerificationFromURL();
   });
+
+  // URL에서 이메일 인증 상태 확인 (이메일 인증 링크를 클릭하고 돌아왔을 때)
+  function checkEmailVerificationFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isVerified = urlParams.get('emailVerified');
+    const email = urlParams.get('email');
+
+    if (isVerified === 'true' && email) {
+      // 이메일 인증이 완료된 상태
+      $('#email').val(email);
+      $('#email').prop('disabled', true);
+      $('#sendEmailBtn').hide();
+      $('#verifyEmailBtn').show();
+
+      // 인증 코드 대기 중인 상태로 설정
+      emailSent = true;
+    }
+  }
 
   function initializeSteps() {
     // 모든 스텝을 보이게 하고 위치 초기화
@@ -383,6 +510,28 @@
     updateProgressBar(newStep);
   }
 
+  function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  }
+
+  function showError(element, message) {
+    const $input = $(element);
+    const $feedback = $('#' + $input.attr('id') + '-feedback');
+
+    $input.addClass('is-invalid');
+    $feedback.text(message);
+    $feedback.css('display', 'block');
+  }
+
+  function hideError(element) {
+    const $input = $(element);
+    const $feedback = $('#' + $input.attr('id') + '-feedback');
+
+    $input.removeClass('is-invalid');
+    $feedback.css('display', 'none');
+  }
+
   function setupEventHandlers() {
     // 뒤로 가기 버튼
     $('.back-link').click(function(e) {
@@ -394,72 +543,210 @@
       }
     });
 
-    // 스텝 1: 이메일 인증 및 비밀번호 검증
+    // 이메일 입력 유효성 검사
+    $('#email').on('input', function() {
+      const email = $(this).val();
+
+      if (email && !validateEmail(email)) {
+        showError(this, '유효한 이메일 주소를 입력해주세요.');
+      } else {
+        hideError(this);
+      }
+    });
+
+    // 이메일 인증 메일 발송 버튼
     $('#sendEmailBtn').click(function() {
       const email = $('#email').val();
-      if (!email || !email.includes('@')) {
-        alert('유효한 이메일을 입력해주세요.');
+
+      if (!email) {
+        showError('#email', '이메일을 입력해주세요.');
         return;
       }
 
-      // 이메일 중복 확인 및 인증 메일 발송 (서버 통신 코드는 추가 필요)
+      if (!validateEmail(email)) {
+        showError('#email', '유효한 이메일 주소를 입력해주세요.');
+        return;
+      }
+
+      // TODO: 이메일 중복 확인 및 인증 메일 발송 API 호출
+      // $.ajax({
+      //   url: '/api/auth/send-verification',
+      //   type: 'POST',
+      //   data: { email: email },
+      //   success: function(response) {
+      //     // 성공 시 UI 업데이트
+      //   },
+      //   error: function(error) {
+      //     // 에러 처리
+      //   }
+      // });
+
+      // 이메일 전송 성공 처리 (실제 구현 시 ajax 성공 콜백에서 처리)
       alert('인증메일이 발송되었습니다. 이메일을 확인해주세요.');
 
-      // 인증 코드 입력 섹션 표시
-      $('.verification-section').show();
-      $('#sendEmailBtn').text('확인');
+      // 이메일 필드 비활성화 및 UI 업데이트
+      $('#email').prop('disabled', true);
+      $('.timer-container').show();
+      $('#verifyEmailBtn').show();
+      $('#resendEmailBtn').show();
 
       // 타이머 시작
       startTimer();
 
-      // 재전송 버튼 표시
-      $('#resendEmailBtn').show();
+      // 인증 메일 발송 상태 업데이트
+      emailSent = true;
+    });
 
-      // 인증 버튼 기능 변경
-      $(this).off('click').on('click', function() {
-        const verificationCode = $('#verificationCode').val();
-        if (!verificationCode) {
-          alert('인증 코드를 입력해주세요.');
-          return;
-        }
+    // 이메일 인증 확인 버튼
+    $('#verifyEmailBtn').click(function() {
+      // TODO: 서버에서 인증 상태를 확인하는 API 호출
+      // $.ajax({
+      //   url: '/api/auth/verify-email',
+      //   type: 'POST',
+      //   data: {
+      //     email: $('#email').val()
+      //   },
+      //   success: function(response) {
+      //     // 성공 시 처리
+      //   },
+      //   error: function(error) {
+      //     // 에러 처리
+      //   }
+      // });
 
-        // 인증 코드 검증 (서버 통신 코드 추가 필요)
-        // 여기서는 임시로 성공 처리
+      // 임시 구현: 성공 케이스 처리
+      // 실제 구현에서는 위의 ajax 콜백에서 처리
+      const success = true; // 임의로 성공 처리
+
+      if (success) {
+        // 인증 성공 시
         emailVerified = true;
         clearInterval(timerInterval);
-        $('#timer').text('인증 완료').css('color', '#0099CC');
-        $('#sendEmailBtn').prop('disabled', true).text('인증완료');
-        $('#resendEmailBtn').hide();
 
-        // 버튼 상태 업데이트
+        // UI 업데이트
+        $('.timer-container').hide();
+        $('#resendEmailBtn').hide();
+        $('#verification-success').show();
+        $('#verification-error').hide();
+        $('#verifyEmailBtn').prop('disabled', true).text('인증완료');
+
+        // 다음 버튼 상태 업데이트
         updateButtonState(1);
-      });
+      } else {
+        // 인증 실패 시
+        emailVerified = false;
+        $('#verification-success').hide();
+        $('#verification-error').show();
+      }
     });
 
     // 이메일 재전송 버튼
     $('#resendEmailBtn').click(function() {
+      // TODO: 재발송 API 호출
+      // $.ajax({
+      //   url: '/api/auth/resend-verification',
+      //   type: 'POST',
+      //   data: { email: $('#email').val() },
+      //   success: function(response) {
+      //     // 성공 시 처리
+      //   },
+      //   error: function(error) {
+      //     // 에러 처리
+      //   }
+      // });
+
+      // 임시 구현
       clearInterval(timerInterval);
+
+      // 타이머 초기화 및 재시작
+      $('.timer-container').show();
+      $('#timer').css('color', '#FF0000');
       startTimer();
+
+      // 알림
       alert('인증메일이 재발송되었습니다.');
+
+      // 상태 메시지 초기화
+      $('#verification-success').hide();
+      $('#verification-error').hide();
+
+      // 인증 버튼 초기화
+      $('#verifyEmailBtn').prop('disabled', false).text('인증 확인');
     });
 
     // 비밀번호 유효성 검사
-    $('#password, #passwordConfirm').on('input', function() {
+    $('#password').on('input', function() {
+      const password = $(this).val();
+
+      if (password && password.length < 6) {
+        showError(this, '비밀번호는 최소 6자 이상이어야 합니다.');
+        passwordValid = false;
+      } else {
+        hideError(this);
+
+        // 비밀번호 확인 필드가 입력된 경우 일치 여부 확인
+        const passwordConfirm = $('#passwordConfirm').val();
+        if (passwordConfirm) {
+          if (password !== passwordConfirm) {
+            showError('#passwordConfirm', '비밀번호가 일치하지 않습니다.');
+            passwordValid = false;
+          } else {
+            hideError('#passwordConfirm');
+            passwordValid = true;
+          }
+        }
+      }
+
+      updateButtonState(1);
+    });
+
+    // 비밀번호 확인 유효성 검사
+    $('#passwordConfirm').on('input', function() {
+      const passwordConfirm = $(this).val();
       const password = $('#password').val();
-      const passwordConfirm = $('#passwordConfirm').val();
-      passwordValid = password.length >= 6 && password === passwordConfirm;
+
+      if (passwordConfirm && password !== passwordConfirm) {
+        showError(this, '비밀번호가 일치하지 않습니다.');
+        passwordValid = false;
+      } else {
+        hideError(this);
+        passwordValid = password.length >= 6 && password === passwordConfirm;
+      }
+
       updateButtonState(1);
     });
 
     // 스텝 2: 회원 정보 입력 (닉네임, 성별, 출생년도)
-    $('#nickname, #gender, #birthYear').on('input change', function() {
-      const nicknameValid = $('#nickname').val().length > 0;
-      const genderSelected = $('#gender').val() !== null && $('#gender').val() !== "";
-      const birthYearValid = $('#birthYear').val().length === 4 &&
-          Number($('#birthYear').val()) >= 1900 &&
-          Number($('#birthYear').val()) <= new Date().getFullYear();
+    $('#nickname').on('input', function() {
+      if (!$(this).val()) {
+        showError(this, '닉네임을 입력해주세요.');
+      } else {
+        hideError(this);
+      }
+      updateStep2ButtonState();
+    });
 
-      $('#step2-btn').prop('disabled', !(nicknameValid && genderSelected && birthYearValid));
+    $('#gender').on('change', function() {
+      if (!$(this).val()) {
+        showError(this, '성별을 선택해주세요.');
+      } else {
+        hideError(this);
+      }
+      updateStep2ButtonState();
+    });
+
+    $('#birthYear').on('input', function() {
+      const birthYear = Number($(this).val());
+      const currentYear = new Date().getFullYear();
+
+      if (!$(this).val()) {
+        showError(this, '출생년도를 입력해주세요.');
+      } else if (birthYear < 1900 || birthYear > currentYear) {
+        showError(this, '유효한 출생년도를 입력해주세요 (1900-' + currentYear + ').');
+      } else {
+        hideError(this);
+      }
+      updateStep2ButtonState();
     });
 
     // 스텝 3: 약관 동의
@@ -489,7 +776,29 @@
       if (currentStep < totalSteps) {
         goToStep(currentStep + 1, 1); // 1은 다음으로 이동
       } else {
-        // 회원가입 완료 처리
+        // TODO: 회원가입 API 호출
+        // $.ajax({
+        //   url: '/api/auth/register',
+        //   type: 'POST',
+        //   contentType: 'application/json',
+        //   data: JSON.stringify({
+        //     email: $('#email').val(),
+        //     password: $('#password').val(),
+        //     nickname: $('#nickname').val(),
+        //     gender: $('#gender').val(),
+        //     birthYear: $('#birthYear').val(),
+        //     marketingConsent: $('input[name="marketing"]').is(':checked')
+        //   }),
+        //   success: function(response) {
+        //     alert('회원가입이 완료되었습니다!');
+        //     window.location.href = '/login';
+        //   },
+        //   error: function(error) {
+        //     alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+        //   }
+        // });
+
+        // 임시 구현
         alert('회원가입이 완료되었습니다!');
         window.location.href = '/login';
       }
@@ -498,8 +807,19 @@
 
   function updateButtonState(step) {
     if (step === 1) {
+      // 다음 버튼은 이메일 인증이 완료되고 비밀번호가 유효한 경우에만 활성화
       $('#step1-btn').prop('disabled', !(emailVerified && passwordValid));
     }
+  }
+
+  function updateStep2ButtonState() {
+    const nicknameValid = $('#nickname').val().length > 0;
+    const genderSelected = $('#gender').val() !== null && $('#gender').val() !== "";
+    const birthYearValid = $('#birthYear').val().length === 4 &&
+        Number($('#birthYear').val()) >= 1900 &&
+        Number($('#birthYear').val()) <= new Date().getFullYear();
+
+    $('#step2-btn').prop('disabled', !(nicknameValid && genderSelected && birthYearValid));
   }
 
   function updateTermsButtonState() {
@@ -520,34 +840,13 @@
 
       if (time < 0) {
         clearInterval(timerInterval);
-        $('#timer').text('시간 초과').css('color', '#FF0000');
-        $('#sendEmailBtn').text('재전송');
-        $('#sendEmailBtn').off('click').on('click', function() {
-          $('#timer').css('color', '#FF0000');
-          startTimer();
-          alert('인증메일이 재발송되었습니다.');
-          $(this).text('확인');
+        $('.timer-container').text('인증 시간이 만료되었습니다.').css('color', '#FF0000');
+        $('#resendEmailBtn').text('인증메일 다시 보내기');
+        $('#verifyEmailBtn').prop('disabled', true);
 
-          // 버튼 기능 다시 변경
-          $(this).off('click').on('click', function() {
-            const verificationCode = $('#verificationCode').val();
-            if (!verificationCode) {
-              alert('인증 코드를 입력해주세요.');
-              return;
-            }
-
-            // 인증 코드 검증 (서버 통신 코드 추가 필요)
-            // 여기서는 임시로 성공 처리
-            emailVerified = true;
-            clearInterval(timerInterval);
-            $('#timer').text('인증 완료').css('color', '#0099CC');
-            $('#sendEmailBtn').prop('disabled', true).text('인증완료');
-            $('#resendEmailBtn').hide();
-
-            // 버튼 상태 업데이트
-            updateButtonState(1);
-          });
-        });
+        // 타이머 만료시 인증 상태 초기화
+        emailVerified = false;
+        updateButtonState(1);
       }
     }, 1000);
   }
