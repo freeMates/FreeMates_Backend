@@ -20,6 +20,16 @@ public class CommonUtil {
   }
 
   /**
+   *
+   * 인증확인용 url생성
+   */
+  //랜덤으로 숫자 생성
+  public static String creatUUID() {
+    return String.valueOf(UUID.randomUUID());
+  }
+
+
+  /**
    * 문자열 SHA-256 해시 계산
    */
   public static String calculateSha256ByStr(String input) {
