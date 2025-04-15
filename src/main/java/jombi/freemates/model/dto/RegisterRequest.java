@@ -1,17 +1,21 @@
 package jombi.freemates.model.dto;
 
-import jakarta.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jombi.freemates.model.constant.Gender;
-import jombi.freemates.model.constant.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @ToString
 @Builder
+@Setter
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)//알 수없는 필드 무시
 public class RegisterRequest {
 
   private String username;

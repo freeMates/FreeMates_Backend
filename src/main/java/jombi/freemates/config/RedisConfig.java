@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @RequiredArgsConstructor
@@ -22,16 +23,21 @@ public class RedisConfig {
 
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
+
     return new LettuceConnectionFactory(host, port);
   }
 
   @Bean
   public RedisTemplate<String, Object> redisTemplate() {
-    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-    //key,value를 Email,code로 구현할거기에 둘다 String으로 직렬화 해도 문제없다.
-    redisTemplate.setKeySerializer(new StringRedisSerializer());
-    redisTemplate.setValueSerializer(new StringRedisSerializer());
-
-    redisTemplate.setConnectionFactory(redisConnectionFactory());
-    return redisTemplate;
+    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    template.setConnectionFactory(redisConnectionFactory());
+    // 키는 String으로 직렬화
+    template.setKeySerializer(new StringRedisSerializer());
+    // 값은 JSON으로 직렬화
+    template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    // 해시 키/값도 동일하게 설정
+    template.setHashKeySerializer(new StringRedisSerializer());
+    template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+    template.afterPropertiesSet();
+    return template;
   }}
