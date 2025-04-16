@@ -29,8 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
-  private final MailService mailService;
-
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-04-15",
@@ -83,9 +81,6 @@ public class AuthController {
   @LogMethodInvocation
   public ResponseEntity<String> register(
       @RequestBody RegisterRequest request) {
-    String mail = authService.register(request);
-    mailService.sendEmail(mail);
-
     return ResponseEntity.ok("회원가입 요청이 완료되었습니다. 이메일 인증을 진행해주세요.");
   }
 
