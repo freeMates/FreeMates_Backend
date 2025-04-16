@@ -1,9 +1,11 @@
 package jombi.freemates.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,8 +29,8 @@ public class RedisConfig {
     return new LettuceConnectionFactory(host, port);
   }
 
-  @Bean
-  public RedisTemplate<String, Object> redisTemplate() {
+  @Bean(name ="objectRedisTemplate")
+  public RedisTemplate<String, Object> objectRedisTemplate() {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(redisConnectionFactory());
     // 키는 String으로 직렬화
@@ -40,4 +42,14 @@ public class RedisConfig {
     template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
     template.afterPropertiesSet();
     return template;
-  }}
+  }
+
+
+
+
+
+
+
+
+}
+

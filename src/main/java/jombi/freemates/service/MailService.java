@@ -32,7 +32,6 @@ public class MailService {
 
   private final JavaMailSender mailSender;
   private final RedisTemplate<String, String> redisTemplate;
-  private final AuthService authService;
   private final MemberRepository memberRepository;
 
   // Redis 이메일 코드 유효시간 : 3분
@@ -46,17 +45,17 @@ public class MailService {
   private String baseUrl;
 
   // 메일 발신자
-  @Value("${mail.username}")
+  @Value("${spring.mail.username}")
   private String from;
 
   // 메세지 만들기
-  private MimeMessage createMessage(String mail, Object uuidObject) throws MessagingException {
+  private MimeMessage createMessage(String mail, String uuidString) throws MessagingException {
     MimeMessage message = mailSender.createMimeMessage();
     message.setFrom(new InternetAddress(from));
     message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail));
     message.setSubject("freemates 이메일 인증");
 
-    String verificationUrl = baseUrl + "/api/mail/verify?mail=" + mail + "&uuidObject=" + uuidObject;
+    String verificationUrl = baseUrl + "/api/mail/verify?mail=" + mail + "&uuidString=" + uuidString;
 
     String body = "";
     body += "<h3> 다음을 눌러 인증을 완료해 주세요</h3>";
