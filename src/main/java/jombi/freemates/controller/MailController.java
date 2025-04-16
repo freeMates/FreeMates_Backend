@@ -92,8 +92,6 @@ public class MailController {
         ⚠️ 이 API는 이메일 링크를 클릭할 때 자동으로 호출되며, 사용자에게는 결과 메시지만 표시됩니다.
         """
   )
-
-
   @GetMapping("/verify")
   @LogMethodInvocation
   public ResponseEntity<String> verifyEmail(

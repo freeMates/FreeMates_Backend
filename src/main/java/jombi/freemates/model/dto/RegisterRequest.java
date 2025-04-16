@@ -15,7 +15,6 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)//알 수없는 필드 무시
 public class RegisterRequest {
 
   private String username;
