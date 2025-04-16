@@ -20,6 +20,16 @@ public class CommonUtil {
   }
 
   /**
+   * UUID 생성
+   * @return UUID 문자열
+   */
+  public static String createCleanUuidString() {
+    // uuid 내부 "-" 삭제
+    return UUID.randomUUID().toString().replace("-", "");
+  }
+
+
+  /**
    * 문자열 SHA-256 해시 계산
    */
   public static String calculateSha256ByStr(String input) {

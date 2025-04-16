@@ -2,6 +2,7 @@ package jombi.freemates.service;
 
 import static jombi.freemates.util.LogUtil.superLogDebug;
 
+import java.util.concurrent.TimeUnit;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -11,19 +12,17 @@ import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.util.JwtUtil;
-import jombi.freemates.util.LogUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import jombi.freemates.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -35,19 +34,38 @@ public class AuthService {
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
   private final AuthenticationManager authenticationManager;
   private final JwtUtil jwtUtil;
-
-
+  private final RedisTemplate<String, Object> redisTemplate;
   /**
-   * 회원가입
+   * 회원가입 이메일 인증 전
    */
-  public RegisterResponse register(RegisterRequest request) {
+  public String register(RegisterRequest request) {
 
     // 중복 아이디 검증
     if (memberRepository.existsByUsername(request.getUsername())) {
       log.error("이미 사용중인 아이디 입니다. 요청 아이디: {}", request.getUsername());
       throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
     }
+    //중복 이메일 검증
+    if(memberRepository.existsByEmail(request.getEmail())) {
+      log.error("이미 사용중인 이메일 입니다. 요청 아이디: {}", request.getEmail());
+      throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+    }
+    // Redis에 임시 저장 (3분 TTL)
+    String tempKey ="register:" + request.getEmail();
+    redisTemplate.opsForValue().set(tempKey, request, 3, TimeUnit.MINUTES);
 
+
+    return request.getEmail();
+  }
+  /**
+   * 회원가입 이메일 인증 후 최종
+   */
+  public void completeRegister(String email) {
+    String tempKey ="register:"+ email;
+    RegisterRequest request = (RegisterRequest) redisTemplate.opsForValue().get(tempKey);
+    if(request == null) {
+      throw new CustomException(ErrorCode.REGISTRATION_EXPIRED);
+    }
     // 사용자 저장
     Member savedMember = memberRepository.save(
         Member.builder()
@@ -60,9 +78,14 @@ public class AuthService {
             .role(Role.ROLE_USER)
             .build());
 
+    // Redis에서 삭제
+    redisTemplate.delete(tempKey);
+
     superLogDebug(savedMember);
-    return RegisterResponse.builder().username(savedMember.getUsername()).memberId(savedMember.getMemberId()).build();
+
   }
+
+
 
   /**
    * 로그인
@@ -89,9 +112,10 @@ public class AuthService {
     return LoginResponse.builder()
         .accessToken(accessToken)
         .refreshToken(refreshToken)
-        .nickname(member.getUsername())
+        .nickname(member.getNickname())
         .build();
   }
+
 
 
 }

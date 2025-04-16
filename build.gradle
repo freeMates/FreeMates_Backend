@@ -86,9 +86,15 @@ dependencies {
     // SMB
     implementation 'org.springframework.integration:spring-integration-smb:6.4.2'
 
+    //mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // Thymleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
+
+    //validation
+    implementation 'commons-validator:commons-validator:1.7'
 
 }
 

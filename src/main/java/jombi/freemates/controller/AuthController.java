@@ -7,14 +7,20 @@ import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.service.AuthService;
+import jombi.freemates.service.MailService;
 import jombi.freemates.util.aspect.LogMethodInvocation;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +29,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
-
   @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-04-15",
+          author = Author.LEEDAYE,
+          issueNumber = 50,
+          description = "이메일인증 기능추가"
+      ),
       @ApiChangeLog(
           date = "2025-04-13",
           author = Author.LEEDAYE,
@@ -68,9 +79,9 @@ public class AuthController {
 
   @PostMapping("/register")
   @LogMethodInvocation
-  public ResponseEntity<RegisterResponse> register(
+  public ResponseEntity<String> register(
       @RequestBody RegisterRequest request) {
-    return ResponseEntity.ok(authService.register(request));
+    return ResponseEntity.ok("회원가입 요청이 완료되었습니다. 이메일 인증을 진행해주세요.");
   }
 
   /**
@@ -124,6 +135,17 @@ public class AuthController {
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.login(request));
   }
+
+  //아이디찾기
+
+  //비밀번호 변경
+
+  // 로그아웃
+
+
+
+
+
 
 
 }
