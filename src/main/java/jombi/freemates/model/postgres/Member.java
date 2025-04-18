@@ -30,9 +30,9 @@ public class Member extends BasePostgresEntity {
   @Enumerated(EnumType.STRING)//MALE, FEMALE
   private Gender gender;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String email;
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String nickname;
 
   private Role role;
