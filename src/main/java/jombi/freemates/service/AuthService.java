@@ -2,6 +2,7 @@ package jombi.freemates.service;
 
 import static jombi.freemates.util.LogUtil.superLogDebug;
 
+import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
@@ -9,7 +10,6 @@ import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
-import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
@@ -35,57 +35,54 @@ public class AuthService {
   private final AuthenticationManager authenticationManager;
   private final JwtUtil jwtUtil;
   private final RedisTemplate<String, Object> redisTemplate;
+  // 회원가입 나이 제한
+  private static final Integer MIN_AGE = 18;
+  private static final Integer MAX_AGE = 90;
+
   /**
-   * 회원가입 이메일 인증 전
+   * 회원가입
    */
-  public String register(RegisterRequest request) {
+  public void register(RegisterRequest request){
+    int age = request.getAge();// 한국식 나이
+    int currentYear = LocalDate.now().getYear();
+    int birthYear = currentYear - age+ 1;
 
-    // 중복 아이디 검증
-    if (memberRepository.existsByUsername(request.getUsername())) {
-      log.error("이미 사용중인 아이디 입니다. 요청 아이디: {}", request.getUsername());
-      throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
+    // 중복 닉네임 검증
+    if(memberRepository.existsByNickname(request.getNickname())){
+      log.error("이미 사용중인 닉네임입니다. 요청 아이디: {}",request.getNickname());
+      throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
-    //중복 이메일 검증
-    if(memberRepository.existsByEmail(request.getEmail())) {
-      log.error("이미 사용중인 이메일 입니다. 요청 아이디: {}", request.getEmail());
-      throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-    }
-    // Redis에 임시 저장 (3분 TTL)
-    String tempKey ="register:" + request.getEmail();
-    redisTemplate.opsForValue().set(tempKey, request, 3, TimeUnit.MINUTES);
 
-
-    return request.getEmail();
-  }
-  /**
-   * 회원가입 이메일 인증 후 최종
-   */
-  public void completeRegister(String email) {
-    String tempKey ="register:"+ email;
-    RegisterRequest request = (RegisterRequest) redisTemplate.opsForValue().get(tempKey);
-    if(request == null) {
-      throw new CustomException(ErrorCode.REGISTRATION_EXPIRED);
+    // 정상나이 확인
+    if(age<MIN_AGE || age>MAX_AGE){
+      log.error("정상적인 나이 범위가 아닙니다 {}",age);
+      throw new CustomException(ErrorCode.INVALID_AGE);
     }
     // 사용자 저장
     Member savedMember = memberRepository.save(
-        Member.builder()
+            Member.builder()
             .username(request.getUsername())
             .password(bCryptPasswordEncoder.encode(request.getPassword()))
             .email(request.getEmail())
-            .birthYear(request.getBirthYear())
+            .birthYear(birthYear)
             .gender(request.getGender())
             .nickname(request.getNickname())
             .role(Role.ROLE_USER)
             .build());
 
-    // Redis에서 삭제
-    redisTemplate.delete(tempKey);
-
     superLogDebug(savedMember);
-
   }
 
 
+  /**
+   * 아이디 중복 확인
+   */
+  public void duplicateUsername(String username) {
+    if (memberRepository.existsByUsername(username)) {
+      log.error("이미 사용중인 아이디 입니다. 요청 아이디: {}", username);
+      throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
+    }
+  }
 
   /**
    * 로그인
