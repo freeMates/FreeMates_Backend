@@ -10,6 +10,7 @@ import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
+import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
@@ -42,7 +43,7 @@ public class AuthService {
   /**
    * 회원가입
    */
-  public void register(RegisterRequest request){
+  public RegisterResponse register(RegisterRequest request){
     int age = request.getAge();// 한국식 나이
     int currentYear = LocalDate.now().getYear();
     int birthYear = currentYear - age+ 1;
@@ -58,6 +59,7 @@ public class AuthService {
       log.error("정상적인 나이 범위가 아닙니다 {}",age);
       throw new CustomException(ErrorCode.INVALID_AGE);
     }
+    try{
     // 사용자 저장
     Member savedMember = memberRepository.save(
             Member.builder()
@@ -71,6 +73,16 @@ public class AuthService {
             .build());
 
     superLogDebug(savedMember);
+    return RegisterResponse.builder()
+          .username(savedMember.getUsername())
+          .memberId(savedMember.getMemberId())
+          .email(savedMember.getEmail())
+          .nickname(savedMember.getNickname())
+          .build();}
+    catch(Exception e){
+      throw new CustomException(ErrorCode.INVALID_REQUEST);
+
+    }
   }
 
 
@@ -78,9 +90,13 @@ public class AuthService {
    * 아이디 중복 확인
    */
   public boolean duplicateUsername(String username) {
-    if (memberRepository.existsByUsername(username)) {
+    try{
+      memberRepository.existsByUsername(username);
       return true;
-    }else{ return false;}
+    } catch (RuntimeException e) {
+      return false;
+    }
+
   }
 
   /**

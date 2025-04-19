@@ -6,6 +6,7 @@ import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
+import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.service.AuthService;
 import jombi.freemates.service.MailService;
 import jombi.freemates.util.aspect.LogMethodInvocation;
@@ -83,21 +84,25 @@ public class AuthController {
           - **`gender`**: 회원 성별 (gender 로 MALE, FEMALE 로 받아야함)
           - **`age`**: 나이 (18세 이상 90세 이하)
           
-          ## 반환값 (ResponseEntity<String>)
-        - **성공 시**: "회원가입이 완료되었습니다."
-
+          ## 반환값 (ResponseEntity<RegisterResponse>)
+          - **`memberId`**: 회원 고유 코드 
+          - **`username`**: 회원 ID
+          - **`nickname`**: 회원 닉네입 
+          - **`email`**: 회원 이메일 
+          
           ## 에러코드
           - **`DUPLICATE_NICKNAME`**: 이미 존재하는 닉네임입니다.
           - **`INVALID_AGE`**: 잘못된 나이입니다.
+          - 
           """
   )
 
   @PostMapping("/register")
   @LogMethodInvocation
-  public ResponseEntity<String> register(
+  public ResponseEntity<RegisterResponse> register(
       @RequestBody RegisterRequest request) {
-    authService.register(request);
-    return ResponseEntity.ok( "회원가입이 완료되었습니다.");
+    RegisterResponse response = authService.register(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   /**
