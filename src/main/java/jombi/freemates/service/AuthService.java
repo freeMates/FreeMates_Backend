@@ -77,11 +77,10 @@ public class AuthService {
   /**
    * 아이디 중복 확인
    */
-  public void duplicateUsername(String username) {
+  public boolean duplicateUsername(String username) {
     if (memberRepository.existsByUsername(username)) {
-      log.error("이미 사용중인 아이디 입니다. 요청 아이디: {}", username);
-      throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
-    }
+      return true;
+    }else{ return false;}
   }
 
   /**

@@ -118,14 +118,12 @@ public class AuthController {
           - **`username`**: 회원 ID
           
           ## 반환값 (ResponseEntity<String>)
-        - **성공 시**: "사용 가능한 아이디입니다."
-          ## 에러코드
-          - **`DUPLICATE_USERNAME`**: 이미 존재하는 아이디입니다.
+        - **맞을 시**: "true"
+        - **틀릴 시**: "false"
           """)
   @GetMapping("/duplicate/username")
-  public ResponseEntity<String> duplicateUsername(@RequestParam String username) {
-    authService.duplicateUsername(username);
-    return ResponseEntity.ok( "사용 가능한 아이디입니다.");
+  public Boolean duplicateUsername(@RequestParam String username) {
+    return authService.duplicateUsername(username);
   }
 
 
