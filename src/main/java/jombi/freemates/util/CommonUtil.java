@@ -9,11 +9,13 @@ import java.util.UUID;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import me.suhsaechan.suhnicknamegenerator.core.SuhRandomKit;
 
 @Slf4j
 public class CommonUtil {
 
   private static final Faker faker = new Faker();
+  private static final SuhRandomKit suhRandomKit = SuhRandomKit.builder().numberLength(4).uuidLength(4).enableAdultContent(true).build();
 
   public static String getRandomName() {
     return faker.funnyName().name() + "-" + UUID.randomUUID().toString().substring(0, 5);
@@ -112,5 +114,9 @@ public class CommonUtil {
       log.error(message);
       throw new CustomException(ErrorCode.INVALID_REQUEST);
     }
+  }
+
+  public static String randomMatureNickName(){
+    return suhRandomKit.matureNickname();
   }
 }

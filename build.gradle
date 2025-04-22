@@ -104,7 +104,7 @@ dependencies {
     implementation 'commons-validator:commons-validator:1.7'
 
     // Suh-Random-Engine
-    implementation 'me.suhsaechan:suh-random-engine:1.0.1'
+    implementation 'me.suhsaechan:suh-random-engine:1.0.2'
 
     // Suh-Logger
     implementation 'me.suhsaechan:suh-logger:1.0.3'
