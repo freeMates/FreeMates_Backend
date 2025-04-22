@@ -1,9 +1,10 @@
-package jombi.freemates.util;
+package jombi.freemates.util.deprecated;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Deprecated
 public class TimeUtil {
 
   public static final String BASIC_DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";

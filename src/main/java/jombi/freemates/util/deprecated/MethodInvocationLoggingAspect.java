@@ -1,4 +1,4 @@
-package jombi.freemates.util.aspect;
+package jombi.freemates.util.deprecated;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+@Deprecated
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class MethodInvocationLoggingAspect {
   /**
    * RequestContextHolder를 통해 현재 HTTP 요청 객체를 가져와 RequestID 값을 읽음
    */
-  @Around("@annotation(LogMethodInvocation) || @annotation(LogMonitoringInvocation)")
+  @Around("@annotation(jombi.freemates.util.deprecated.LogMethodInvocation) || @annotation(jombi.freemates.util.deprecated.LogMonitoringInvocation)")
   public Object logMethod(ProceedingJoinPoint joinPoint) throws Throwable {
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 

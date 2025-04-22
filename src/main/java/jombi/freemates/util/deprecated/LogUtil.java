@@ -1,4 +1,4 @@
-package jombi.freemates.util;
+package jombi.freemates.util.deprecated;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * 로그 유틸리티 클래스
  */
 @Slf4j
+@Deprecated
 public class LogUtil {
 
   private static final ObjectMapper objectMapper = new ObjectMapper()

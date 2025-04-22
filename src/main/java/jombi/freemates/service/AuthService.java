@@ -1,9 +1,6 @@
 package jombi.freemates.service;
 
-import static jombi.freemates.util.LogUtil.superLogDebug;
-
 import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -19,6 +16,7 @@ import jombi.freemates.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import me.suhsaechan.suhlogger.util.SuhLogger;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -72,7 +70,7 @@ public class AuthService {
             .role(Role.ROLE_USER)
             .build());
 
-    superLogDebug(savedMember);
+    SuhLogger.superLog(savedMember);
     return RegisterResponse.builder()
           .username(savedMember.getUsername())
           .memberId(savedMember.getMemberId())

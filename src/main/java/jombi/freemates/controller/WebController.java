@@ -1,5 +1,6 @@
 package jombi.freemates.controller;
 
+import me.suhsaechan.suhlogger.annotation.LogMonitor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class WebController {
 
   @GetMapping("/")
+  @LogMonitor
   public String index(Model model) {
     model.addAttribute("title", "로그인 - FreeMates");
     model.addAttribute("headerType", "default");
@@ -17,6 +19,7 @@ public class WebController {
   }
 
   @GetMapping("/login")
+  @LogMonitor
   public String login(Model model) {
     model.addAttribute("title", "로그인 - FreeMates");
     model.addAttribute("headerType", "default");
@@ -26,6 +29,7 @@ public class WebController {
   }
 
   @GetMapping("/error")
+  @LogMonitor
   public String error(Model model) {
     model.addAttribute("title", "에러 - FreeMates");
     model.addAttribute("headerType", "default");
@@ -35,6 +39,7 @@ public class WebController {
   }
 
   @GetMapping("/register")
+  @LogMonitor
   public String signUpStep1(Model model) {
     model.addAttribute("title", "회원가입 - Step 1");
     model.addAttribute("headerType", "signUp");

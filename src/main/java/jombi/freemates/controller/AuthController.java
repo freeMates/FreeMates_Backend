@@ -8,15 +8,12 @@ import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.service.AuthService;
-import jombi.freemates.service.MailService;
-import jombi.freemates.util.aspect.LogMethodInvocation;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import me.suhsaechan.suhlogger.annotation.LogMonitor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -98,7 +95,7 @@ public class AuthController {
   )
 
   @PostMapping("/register")
-  @LogMethodInvocation
+  @LogMonitor
   public ResponseEntity<RegisterResponse> register(
       @RequestBody RegisterRequest request) {
     RegisterResponse response = authService.register(request);
@@ -127,6 +124,7 @@ public class AuthController {
         - **틀릴 시**: "false"
           """)
   @GetMapping("/duplicate/username")
+  @LogMonitor
   public Boolean duplicateUsername(@RequestParam String username) {
     return authService.duplicateUsername(username);
   }
@@ -176,7 +174,7 @@ public class AuthController {
           """
   )
   @PostMapping("/login")
-  @LogMethodInvocation
+  @LogMonitor
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.login(request));
   }
