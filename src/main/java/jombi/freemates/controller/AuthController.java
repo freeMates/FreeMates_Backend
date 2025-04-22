@@ -7,15 +7,12 @@ import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.service.AuthService;
-import jombi.freemates.service.MailService;
-import jombi.freemates.util.aspect.LogMethodInvocation;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import me.suhsaechan.suhlogger.annotation.LogMonitor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,8 +80,9 @@ public class AuthController {
           - **`gender`**: 회원 성별 (gender 로 MALE, FEMALE 로 받아야함)
           - **`age`**: 나이 (18세 이상 90세 이하)
           
-          ## 반환값 (ResponseEntity<String>)
-        - **성공 시**: "회원가입이 완료되었습니다."
+          ## 반환값 (RegisterResponse)
+        - **성공 시**:
+          - **`member`**: 저장된 회원 정보
 
           ## 에러코드
           - **`DUPLICATE_NICKNAME`**: 이미 존재하는 닉네임입니다.
@@ -93,11 +91,11 @@ public class AuthController {
   )
 
   @PostMapping("/register")
-  @LogMethodInvocation
-  public ResponseEntity<String> register(
+  @LogMonitor
+  public ResponseEntity<Void> register(
       @RequestBody RegisterRequest request) {
     authService.register(request);
-    return ResponseEntity.ok( "회원가입이 완료되었습니다.");
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   /**
@@ -123,10 +121,13 @@ public class AuthController {
           - **`DUPLICATE_USERNAME`**: 이미 존재하는 아이디입니다.
           """)
   @GetMapping("/duplicate/username")
+  @LogMonitor
   public ResponseEntity<String> duplicateUsername(@RequestParam String username) {
     authService.duplicateUsername(username);
+    // 무조건 200 OK 반환값 body에 Booelean
     return ResponseEntity.ok( "사용 가능한 아이디입니다.");
   }
+
 
 
   /**
@@ -173,7 +174,7 @@ public class AuthController {
           """
   )
   @PostMapping("/login")
-  @LogMethodInvocation
+  @LogMonitor
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.login(request));
   }

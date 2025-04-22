@@ -1,15 +1,13 @@
 package jombi.freemates.service;
 
-import static jombi.freemates.util.LogUtil.superLogDebug;
-
 import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
+import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
@@ -18,6 +16,7 @@ import jombi.freemates.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import me.suhsaechan.suhlogger.util.SuhLogger;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,7 +41,8 @@ public class AuthService {
   /**
    * 회원가입
    */
-  public void register(RegisterRequest request){
+  public RegisterResponse register(RegisterRequest request){
+
     int age = request.getAge();// 한국식 나이
     int currentYear = LocalDate.now().getYear();
     int birthYear = currentYear - age+ 1;
@@ -70,18 +70,23 @@ public class AuthService {
             .role(Role.ROLE_USER)
             .build());
 
-    superLogDebug(savedMember);
+    SuhLogger.superLog(savedMember);
+    return RegisterResponse.builder()
+        .member(savedMember)
+        .build();
   }
 
 
   /**
    * 아이디 중복 확인
    */
-  public void duplicateUsername(String username) {
-    if (memberRepository.existsByUsername(username)) {
-      log.error("이미 사용중인 아이디 입니다. 요청 아이디: {}", username);
-      throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
+  public Boolean duplicateUsername(String username) {
+    // 중복 아이디 검증
+    if(memberRepository.existsByUsername(username)){
+      log.error("이미 사용중인 아이디입니다. 요청 아이디: {}",username);
+      return false;
     }
+    return true;
   }
 
   /**

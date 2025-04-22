@@ -4,13 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.service.MailService;
-import jombi.freemates.util.aspect.LogMethodInvocation;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import me.suhsaechan.suhlogger.annotation.LogMonitor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +51,7 @@ public class MailController {
           """
   )
   @GetMapping("/send")
-  @LogMethodInvocation
+  @LogMonitor
   public ResponseEntity<String> sendEmail(@RequestParam String mail) {
     mailService.sendEmail(mail);
     return ResponseEntity.ok("메일 전송을 요청하였습니다.");
@@ -93,7 +91,7 @@ public class MailController {
         """
   )
   @GetMapping("/verify")
-  @LogMethodInvocation
+  @LogMonitor
   public ResponseEntity<String> verifyEmail(
       @RequestParam String mail,
       @RequestParam String uuidString) {
