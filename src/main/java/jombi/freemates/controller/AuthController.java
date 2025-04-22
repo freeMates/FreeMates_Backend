@@ -1,6 +1,7 @@
 package jombi.freemates.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
@@ -23,13 +24,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+
+
+@Tag(
+    name = "회원가입, 로그인 API",
+    description = "회원가입, 로그인 관련 API 제공"
+)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
-
   private final AuthService authService;
+
+  /**
+   * 회원가입
+   * **/
   @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-04-17",
+          author = Author.LEEDAYE,
+          issueNumber = 62,
+          description = "회원가입 API수정 및 추가"
+      ),
       @ApiChangeLog(
           date = "2025-04-15",
           author = Author.LEEDAYE,
@@ -62,34 +78,64 @@ public class AuthController {
           
           ## 요청 파라미터 (RegisterRequest)
           - **`username`**: 회원 ID
-          - **`password`**: 회원 비밀번호
-          - **`nickname`**: 회원 닉네입
-          - **`email`**: 회원 이메일
+          - **`password`**: 회원 비밀번호 
+          - **`nickname`**: 회원 닉네입 
+          - **`email`**: 회원 이메일 
           - **`gender`**: 회원 성별 (gender 로 MALE, FEMALE 로 받아야함)
-          - **`birthYear`**: 회원 태어난 년도
+          - **`age`**: 나이 (18세 이상 90세 이하)
           
-          ## 반환값 (RegisterResponse)
+          ## 반환값 (ResponseEntity<RegisterResponse>)
+          - **`memberId`**: 회원 고유 코드 
           - **`username`**: 회원 ID
-          - **`memberId`**: 회원 고유 ID
+          - **`nickname`**: 회원 닉네입 
+          - **`email`**: 회원 이메일 
           
           ## 에러코드
-          - **`DUPLICATE_USERNAME`**: 이미 사용중인 아이디입니다.
+          - **`DUPLICATE_NICKNAME`**: 이미 존재하는 닉네임입니다.
+          - **`INVALID_AGE`**: 잘못된 나이입니다.
+          - 
           """
   )
 
   @PostMapping("/register")
   @LogMethodInvocation
-  public ResponseEntity<String> register(
+  public ResponseEntity<RegisterResponse> register(
       @RequestBody RegisterRequest request) {
-    return ResponseEntity.ok("회원가입 요청이 완료되었습니다. 이메일 인증을 진행해주세요.");
+    RegisterResponse response = authService.register(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
+
+  /**
+   * 아이디 중복 확인
+   * **/
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-04-17",
+          author = Author.LEEDAYE,
+          issueNumber = 62,
+          description = "아이디 중복확인"
+      )})
+  @Operation(summary = "아이디 중복확인",
+      description = """
+          ## 인증(JWT): **불필요**
+          
+          ## 요청 파라미터 (String)
+          - **`username`**: 회원 ID
+          
+          ## 반환값 (ResponseEntity<String>)
+        - **맞을 시**: "true"
+        - **틀릴 시**: "false"
+          """)
+  @GetMapping("/duplicate/username")
+  public Boolean duplicateUsername(@RequestParam String username) {
+    return authService.duplicateUsername(username);
+  }
+
 
   /**
    * 로그인
    * **/
-
   @ApiChangeLogs({
-
       @ApiChangeLog(
           date = "2025-04-11",
           author = Author.LEEDAYE,
@@ -118,7 +164,6 @@ public class AuthController {
           - **`username`**: 회원 ID
           - **`password`**: 회원 비밀번호
 
-          
           ## 반환값 (LoginResponse)
           - **`accessToken`**: 발급된 AccessToken
           - **`refreshToken`**: 발급된 RefreshToken

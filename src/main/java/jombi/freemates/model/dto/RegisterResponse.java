@@ -14,5 +14,9 @@ public class RegisterResponse {
 
   private UUID memberId;
 
+  private String email;
+
   private String nickname;
+
+  private String username;
 }

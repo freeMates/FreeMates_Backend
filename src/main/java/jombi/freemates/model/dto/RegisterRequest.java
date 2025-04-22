@@ -21,7 +21,7 @@ public class RegisterRequest {
 
   private String password;
 
-  private Integer birthYear;
+  private Integer age;
 
   private Gender gender;
 

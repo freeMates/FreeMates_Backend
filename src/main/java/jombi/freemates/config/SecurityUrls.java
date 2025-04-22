@@ -10,10 +10,12 @@ public class SecurityUrls {
    */
   public static final List<String> AUTH_WHITELIST = Arrays.asList(
       // API
-      "/api/auth/register",              // 회원가입
+      "/api/auth/register",             // 회원가입
       "/api/auth/login",               // 로그인
+      "/api/auth/duplicate/username", // 아이디 중복
       "/api/test/**",                  //FIXME: 테스트 API
-      "/api/mail/**",                   //이메일인증
+      "/api/mail/send",                // 이메일 보내기
+      "/api/mail/verify",              // 이메일 인증
       "/api/temp/**",                  //FIXME: 테스트 API
 
       // Swagger
