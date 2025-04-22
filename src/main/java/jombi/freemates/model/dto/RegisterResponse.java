@@ -1,7 +1,6 @@
 package jombi.freemates.model.dto;
 
 import java.util.UUID;
-import jombi.freemates.model.postgres.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,5 +12,11 @@ import lombok.ToString;
 @AllArgsConstructor
 public class RegisterResponse {
 
-  private Member member;
+  private UUID memberId;
+
+  private String email;
+
+  private String nickname;
+
+  private String username;
 }

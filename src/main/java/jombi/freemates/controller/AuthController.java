@@ -6,6 +6,7 @@ import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
+import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.service.AuthService;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
@@ -80,22 +81,25 @@ public class AuthController {
           - **`gender`**: 회원 성별 (gender 로 MALE, FEMALE 로 받아야함)
           - **`age`**: 나이 (18세 이상 90세 이하)
           
-          ## 반환값 (RegisterResponse)
-        - **성공 시**:
-          - **`member`**: 저장된 회원 정보
-
+          ## 반환값 (ResponseEntity<RegisterResponse>)
+          - **`memberId`**: 회원 고유 코드 
+          - **`username`**: 회원 ID
+          - **`nickname`**: 회원 닉네입 
+          - **`email`**: 회원 이메일 
+          
           ## 에러코드
           - **`DUPLICATE_NICKNAME`**: 이미 존재하는 닉네임입니다.
           - **`INVALID_AGE`**: 잘못된 나이입니다.
+          - 
           """
   )
 
   @PostMapping("/register")
   @LogMonitor
-  public ResponseEntity<Void> register(
+  public ResponseEntity<RegisterResponse> register(
       @RequestBody RegisterRequest request) {
-    authService.register(request);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    RegisterResponse response = authService.register(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   /**
@@ -116,18 +120,14 @@ public class AuthController {
           - **`username`**: 회원 ID
           
           ## 반환값 (ResponseEntity<String>)
-        - **성공 시**: "사용 가능한 아이디입니다."
-          ## 에러코드
-          - **`DUPLICATE_USERNAME`**: 이미 존재하는 아이디입니다.
+        - **맞을 시**: "true"
+        - **틀릴 시**: "false"
           """)
   @GetMapping("/duplicate/username")
   @LogMonitor
-  public ResponseEntity<String> duplicateUsername(@RequestParam String username) {
-    authService.duplicateUsername(username);
-    // 무조건 200 OK 반환값 body에 Booelean
-    return ResponseEntity.ok( "사용 가능한 아이디입니다.");
+  public Boolean duplicateUsername(@RequestParam String username) {
+    return authService.duplicateUsername(username);
   }
-
 
 
   /**

@@ -42,7 +42,6 @@ public class AuthService {
    * 회원가입
    */
   public RegisterResponse register(RegisterRequest request){
-
     int age = request.getAge();// 한국식 나이
     int currentYear = LocalDate.now().getYear();
     int birthYear = currentYear - age+ 1;
@@ -58,6 +57,7 @@ public class AuthService {
       log.error("정상적인 나이 범위가 아닙니다 {}",age);
       throw new CustomException(ErrorCode.INVALID_AGE);
     }
+    try{
     // 사용자 저장
     Member savedMember = memberRepository.save(
             Member.builder()
@@ -72,21 +72,29 @@ public class AuthService {
 
     SuhLogger.superLog(savedMember);
     return RegisterResponse.builder()
-        .member(savedMember)
-        .build();
+          .username(savedMember.getUsername())
+          .memberId(savedMember.getMemberId())
+          .email(savedMember.getEmail())
+          .nickname(savedMember.getNickname())
+          .build();}
+    catch(Exception e){
+      throw new CustomException(ErrorCode.INVALID_REQUEST);
+
+    }
   }
 
 
   /**
    * 아이디 중복 확인
    */
-  public Boolean duplicateUsername(String username) {
-    // 중복 아이디 검증
-    if(memberRepository.existsByUsername(username)){
-      log.error("이미 사용중인 아이디입니다. 요청 아이디: {}",username);
+  public boolean duplicateUsername(String username) {
+    try{
+      memberRepository.existsByUsername(username);
+      return true;
+    } catch (RuntimeException e) {
       return false;
     }
-    return true;
+
   }
 
   /**
