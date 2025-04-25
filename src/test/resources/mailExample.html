@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freemates 이메일 인증</title>
+  <style>
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333333;
+      line-height: 1.6;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .email-header {
+      padding: 30px 0;
+      text-align: center;
+      background-color: #ffffff;
+      border-bottom: 1px solid #eeeeee;
+    }
+    .email-header img {
+      max-width: 180px;
+      height: auto;
+    }
+    .email-body {
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .email-banner {
+      margin-bottom: 30px;
+      border-radius: 8px;
+      overflow: hidden;
+      text-align: center; /* 이 부분 추가: 배너 컨테이너를 중앙 정렬 */
+    }
+    .email-banner img {
+      width: 60%;
+      max-width: 540px;
+      height: auto;
+      display: block;
+      margin: 0 auto; /* 이 부분 추가: 이미지를 중앙 정렬 */
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #222222;
+    }
+    p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #555555;
+    }
+    .verify-button {
+      display: inline-block;
+      padding: 15px 45px;
+      margin: 25px 0;
+      background-color: #4285F4;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: background-color 0.15s ease;
+    }
+    .verify-button:hover {
+      background-color: #3367d6;
+    }
+    .email-footer {
+      padding: 20px 30px;
+      text-align: center;
+      background-color: #f9f9f9;
+      font-size: 13px;
+      color: #777777;
+      border-top: 1px solid #eeeeee;
+    }
+    .social-links {
+      padding: 20px 0;
+      text-align: center;
+    }
+    .social-links a {
+      display: inline-block;
+      margin: 0 8px;
+    }
+    .social-links img {
+      width: 24px;
+      height: 24px;
+    }
+    .footer-links {
+      margin-top: 15px;
+      font-size: 12px;
+    }
+    .footer-links a {
+      color: #777777;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+    .copyright {
+      margin-top: 20px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="email-container">
+  <div class="email-header">
+    <!-- Freemates 로고를 여기에 넣으세요 -->
+    <img src="http://suh-project.synology.me/freemates/images/logo.png" alt="Freemates 로고">
+  </div>
+
+  <div class="email-body">
+    <div class="email-banner">
+      <!-- 이메일 인증 배너 이미지 -->
+      <img src="http://suh-project.synology.me/freemates/images/email-verify.webp" alt="이메일 인증">
+    </div>
+
+    <h1>이메일 인증을 완료해주세요</h1>
+
+    <p>안녕하세요, Freemates에 오신 것을 환영합니다!</p>
+    <p>다음 버튼을 눌러 이메일 인증을 완료 해주세요</p>
+
+    <!-- 여기만 동적 URL 사용 -->
+    <a th:href="${verificationUrl}" class="verify-button">인증 완료하기</a>
+
+    <!-- 버튼 작동하지 않을 경우 URL 표시 (선택적) -->
+    <p style="font-size: 14px; color: #888888; margin-top: 20px;">버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣기 해주세요:</p>
+    <p style="font-size: 13px; color: #888888;" th:text="${verificationUrl}">인증 URL</p>
+
+  </div>
+
+  <div class="social-links">
+    <a href="https://facebook.com/freemates" target="_blank"><img src="https://cdn4.iconfinder.com/data/icons/social-media-2210/24/Facebook-512.png" alt="Facebook"></a>
+    <a href="https://instagram.com/freemates" target="_blank"><img src="https://cdn4.iconfinder.com/data/icons/social-media-2210/24/Instagram-512.png" alt="Instagram"></a>
+    <a href="https://twitter.com/freemates" target="_blank"><img src="https://cdn4.iconfinder.com/data/icons/social-media-2210/24/Twitter-512.png" alt="Twitter"></a>
+    <a href="https://youtube.com/freemates" target="_blank"><img src="https://cdn4.iconfinder.com/data/icons/social-media-2210/24/Youtube-512.png" alt="YouTube"></a>
+  </div>
+
+  <div class="email-footer">
+    <div class="footer-links">
+      <a href="http://suh-project.synology.me/freemates/terms">이용약관</a>
+      <a href="http://suh-project.synology.me/freemates/privacy">개인정보처리방침</a>
+      <a href="http://suh-project.synology.me/freemates/help">도움말</a>
+      <a href="http://suh-project.synology.me/freemates/contact">문의하기</a>
+    </div>
+
+    <div class="copyright">
+      <p>© 2025 Freemates. All rights reserved.</p>
+      <p>1999-10-29 Suh Street, Saechan City, Suhul</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -23,6 +23,8 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Slf4j
 @Service
@@ -33,6 +35,7 @@ public class MailService {
   private final JavaMailSender mailSender;
   private final RedisTemplate<String, String> redisTemplate;
   private final MemberRepository memberRepository;
+  private final SpringTemplateEngine templateEngine;
 
   // Redis 이메일 코드 유효시간 : 3분
   private static final long EMAIL_CODE_EXPIRE_MIN = 3;
@@ -53,17 +56,17 @@ public class MailService {
     MimeMessage message = mailSender.createMimeMessage();
     message.setFrom(new InternetAddress(from));
     message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail));
-    message.setSubject("freemates 이메일 인증");
+    message.setSubject("Freemates 이메일 인증 메일입니다.");
 
-    String verificationUrl = baseUrl + "/api/mail/verify?mail=" + mail + "&uuidString=" + uuidString;
+    Context context = new Context();
+    context.setVariable("mail", mail);
+    context.setVariable("uuidString", uuidString);
+    context.setVariable("verificationUrl", baseUrl + "/api/mail/verify?mail=" + mail + "&uuidString=" + uuidString);
+    context.setVariable("baseUrl", baseUrl);
 
-    String body = "";
-    body += "<h3> 다음을 눌러 인증을 완료해 주세요</h3>";
-    body +=
-        "<button style=\"padding:10px 20px; background-color:#CCF6FF; color:#fff; border:none; border-radius:5px; cursor:pointer;\" "
-            + "<p><a href='" + verificationUrl
-            + "' style='padding:10px 20px; background-color:#007BFF; color:#fff; text-decoration:none; border-radius:5px; display:inline-block;'>인증하기</a></p>";
+    String body = templateEngine.process("verificationEmail", context);
     message.setText(body, "UTF-8", "html");
+
     return message;
 
   }
