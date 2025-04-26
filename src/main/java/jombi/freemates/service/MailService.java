@@ -64,7 +64,7 @@ public class MailService {
     context.setVariable("verificationUrl", baseUrl + "/api/mail/verify?mail=" + mail + "&uuidString=" + uuidString);
     context.setVariable("baseUrl", baseUrl);
 
-    String body = templateEngine.process("/mail/verificationEmail", context);
+    String body = templateEngine.process("mail/verificationEmail", context);
     message.setText(body, "UTF-8", "html");
 
     return message;
