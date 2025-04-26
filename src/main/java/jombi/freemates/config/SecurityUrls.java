@@ -26,6 +26,8 @@ public class SecurityUrls {
       "/",                           // 기본 화면 > 로그인화면 리다이렉트
       "/login",                      // 로그인 화면
       "/register",                   // 회원가입 화면
+      "/mail/verification-confirm",  // 이메일 인증 성공 화면
+      "/mail/verification-fail",     // 이메일 인증 실패 화면
 
       // Static Resources
       "/static/**",                       // CSS 파일

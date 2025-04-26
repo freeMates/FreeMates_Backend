@@ -64,7 +64,7 @@ public class MailService {
     context.setVariable("verificationUrl", baseUrl + "/api/mail/verify?mail=" + mail + "&uuidString=" + uuidString);
     context.setVariable("baseUrl", baseUrl);
 
-    String body = templateEngine.process("verificationEmail", context);
+    String body = templateEngine.process("/mail/verificationEmail", context);
     message.setText(body, "UTF-8", "html");
 
     return message;
@@ -105,10 +105,10 @@ public class MailService {
 
   }
 
-  // 이메일 코드 인증
-  public String validateCode(String mail, String uuidString) {
-    final String DEFAULT_FAIL_MESSAGE = "인증 코드가 유효하지 않거나 만료되었습니다.";
-    final String DEFAULT_SUCCESS_MESSAGE = "인증이 완료되었습니다. 앱화면으로 돌아가 주세요";
+  // 이메일 코드 인증 - 리다이렉션 URL 반환
+  public String validateCodeAndGetRedirectUrl(String mail, String uuidString) {
+    final String REDIRECT_SUCCESS_URL = "/mail/verification-confirm";
+    final String REDIRECT_FAIL_URL = "/mail/verification-fail";
 
     try {
       // Redis에서 인증 코드 조회
@@ -121,20 +121,17 @@ public class MailService {
       // 인증 코드 검증
       if (!savedUuidString.equals(uuidString)) {
         log.error("이메일 인증 실패: 유효하지 않은 인증 코드 (email: {}, code: {})", mail, uuidString);
-        return DEFAULT_FAIL_MESSAGE;
+        return REDIRECT_FAIL_URL;
       }
 
       // 인증 성공 시 Redis에서 코드 삭제
       redisTemplate.delete(redisKey);
       log.info("이메일 인증 성공: {}", mail);
 
-      return DEFAULT_SUCCESS_MESSAGE;
-    } catch (CustomException e) {
-      log.error("이메일 인증 실패: {}", e.getMessage());
-      return DEFAULT_FAIL_MESSAGE;
+      return REDIRECT_SUCCESS_URL;
     } catch (Exception e) {
       log.error("이메일 인증 중 오류 발생", e);
-      return DEFAULT_FAIL_MESSAGE;
+      return REDIRECT_FAIL_URL;
     }
   }
 }

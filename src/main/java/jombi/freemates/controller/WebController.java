@@ -48,4 +48,15 @@ public class WebController {
     return "pages/register";
   }
 
+  // 메일 인증 성공 페이지
+  @GetMapping("/mail/verification-confirm")
+  public String showVerificationSuccess() {
+    return "/mail/verificationConfirm";
+  }
+
+  // 메일 인증 실패 페이지
+  @GetMapping("/mail/verification-fail")
+  public String showVerificationFail() {
+    return "/mail/verificationFail";
+  }
 }
