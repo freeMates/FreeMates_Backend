@@ -13,6 +13,8 @@ public class SecurityUrls {
       "/api/auth/register",             // 회원가입
       "/api/auth/login",               // 로그인
       "/api/auth/duplicate/username", // 아이디 중복
+      "/api/auth/refresh/web",
+      "/api/auth/refresh/app",
       "/api/test/**",                  //FIXME: 테스트 API
       "/api/mail/send",                // 이메일 보내기
       "/api/mail/verify",              // 이메일 인증
