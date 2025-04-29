@@ -1,6 +1,12 @@
 package jombi.freemates.service;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -8,7 +14,10 @@ import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
+import jombi.freemates.model.dto.TokenResponse;
 import jombi.freemates.model.postgres.Member;
+import jombi.freemates.model.postgres.RefreshToken;
+import jombi.freemates.repository.RefreshTokenRepository;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
@@ -18,17 +27,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.suhsaechan.suhlogger.util.SuhLogger;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class AuthService {
 
+  private final CustomUserDetailsService customUserDetailsService;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final MemberRepository memberRepository;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
   private final AuthenticationManager authenticationManager;
@@ -88,19 +104,19 @@ public class AuthService {
    * 아이디 중복 확인
    */
   public boolean duplicateUsername(String username) {
-    try{
-      memberRepository.existsByUsername(username);
-      return true;
-    } catch (RuntimeException e) {
-      return false;
-    }
+
+      if(memberRepository.existsByUsername(username)){
+      return true;}
+      else{
+      return false;}
+
 
   }
 
   /**
    * 로그인
    */
-  public LoginResponse login(LoginRequest request) {
+  public ResponseEntity<LoginResponse> login(LoginRequest request) {
     // Authentication 생성
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
@@ -110,21 +126,87 @@ public class AuthService {
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
     Member member = userDetails.getMember();
 
-    //토큰 생성
+
+    // 토큰 생성
     // AccessToken 발급
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
+    // 토큰 저장
+    refreshTokenRepository.save(new RefreshToken(member.getUsername(),refreshToken));
+
+    // RefreshToken을 Set-Cookie로 설정
+    ResponseCookie cookie = buildRefreshCookie(refreshToken);
+
+    // LoginResponse 생성 (accessToken + nickname)
+    LoginResponse loginResponse = LoginResponse.builder()
+        .accessToken(accessToken)
+        .nickname(member.getNickname()) // <- 멤버에서 가져온 닉네임
+        .build();
 
 
     //토큰 반환
-    return LoginResponse.builder()
-        .accessToken(accessToken)
-        .refreshToken(refreshToken)
-        .nickname(member.getNickname())
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        .body(loginResponse);
+  }
+
+  /**
+   * 리프레시 토큰 재발급
+   */
+  public TokenResponse refreshToken(String refreshToken) {
+    // refreshToken 유효성 검증
+    if (!jwtUtil.validateToken(refreshToken)) {
+      throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+    }
+
+    // refreshToken에서 username 추출
+    String username = jwtUtil.getUsernameFromToken(refreshToken);
+
+    // UserDetails 로드
+    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+    // 저장된 RefreshToken과 비교
+    RefreshToken savedToken = refreshTokenRepository.findByUsername(username)
+        .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED));
+    if (!savedToken.getRefreshToken().equals(refreshToken)) {
+      throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+    }
+
+    // 새 토큰 발급
+    Authentication auth = new UsernamePasswordAuthenticationToken(
+        userDetails, null, userDetails.getAuthorities()
+    );
+    String newAccessToken = jwtUtil.generateToken(auth, JwtTokenType.ACCESS);
+    String newRefreshToken = jwtUtil.generateToken(auth, JwtTokenType.REFRESH);
+
+    // RefreshToken 업데이트
+    savedToken.update(newRefreshToken);
+    refreshTokenRepository.save(savedToken);
+
+    // 새 AccessToken + 새 RefreshToken 반환
+    return new TokenResponse(newAccessToken, newRefreshToken);
+  }
+
+  /**
+   * refresh토큰 쿠키 생성
+   *
+   */
+  public ResponseCookie buildRefreshCookie(String token) {
+    return ResponseCookie.from("refreshToken", token)
+        .httpOnly(true).secure(true)
+        .path("/api/auth/refresh/web")
+        .maxAge(JwtTokenType.REFRESH.getDurationMilliseconds()/1000)
+        .sameSite("Strict")
         .build();
   }
+
+
+
+
+
+
 
 
 
