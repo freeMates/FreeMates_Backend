@@ -40,8 +40,8 @@ public class MailService {
   // Redis 이메일 코드 유효시간 : 3분
   private static final long EMAIL_CODE_EXPIRE_MIN = 3;
 
-  // Redis 이메일 코드 key 접두사(prefix)
-  private static final String EMAIL_CODE_PREFIX = "verify:";
+h  // Redis 이메일 코드 키 접두사
+  private static final String EMAIL_VERIFY_PREFIX = "verify:";
 
   // Redis 완료 상태 저장용 키 접두사
   private static final String EMAIL_VERIFIED_PREFIX = "verified:";
@@ -98,7 +98,7 @@ public class MailService {
     String uuidString = CommonUtil.createCleanUuidString();
 
     // Redis에 인증 코드 저장 (유효시간: 3분)
-    redisTemplate.opsForValue().set(EMAIL_CODE_PREFIX + mail, uuidString, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
+    redisTemplate.opsForValue().set(EMAIL_VERIFY_PREFIX + mail, uuidString, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
 
     // 메일 발송
     try {
@@ -113,12 +113,12 @@ public class MailService {
 
   // 이메일 코드 인증 - 리다이렉션 URL 반환
   public String validateCodeAndGetRedirectUrl(String mail, String uuidString) {
-    final String REDIRECT_SUCCESS_URL = "/mail/verification-confirm?mail=" + mail;  // 메일 파라미터 추가
+    final String REDIRECT_SUCCESS_URL = "/mail/verification-confirm";
     final String REDIRECT_FAIL_URL = "/mail/verification-fail";
 
     try {
       // Redis에서 인증 코드 조회
-      String redisKey = EMAIL_CODE_PREFIX + mail;
+      String redisKey = EMAIL_VERIFY_PREFIX + mail;
       String savedUuidString = redisTemplate.opsForValue().get(redisKey);
 
       // null 또는 "null" 문자열 처리
@@ -149,10 +149,10 @@ public class MailService {
     }
   }
 
-  // 이메일 인증 상태 확인 메소드
+  // 이메일 인증 상태 확인
   public boolean isEmailVerified(String mail) {
     String verifiedKey = EMAIL_VERIFIED_PREFIX + mail;
     String value = redisTemplate.opsForValue().get(verifiedKey);
-    return "true".equals(value);
+    return Boolean.TRUE.toString().equals(value);
   }
 }
