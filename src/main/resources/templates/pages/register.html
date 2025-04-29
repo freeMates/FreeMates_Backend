@@ -426,8 +426,8 @@
 <!-- JavaScript 로직 -->
 <script th:inline="javascript">
   // 서버 설정
-  const API_BASE_URL = 'http://localhost:8080'; // LOCAL TEST
-  // const API_BASE_URL = 'https://freemates.suhsaechan.me';
+  // const API_BASE_URL = 'http://localhost:8080'; // LOCAL TEST
+  const API_BASE_URL = 'https://freemates.suhsaechan.me';
 
   // API 경로
   const API_PATHS = {
@@ -791,7 +791,7 @@
           updateStep2ButtonState();
         },
         error: function() {
-          showError('#username', '아이디 중복 확인 중 오류가 발생했습니다.');
+          showError('#username', '아이디가 중복됩니다');
           updateStep2ButtonState();
         }
       });
