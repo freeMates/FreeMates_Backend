@@ -9,6 +9,7 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/common.js}"></script>
+  <script th:src="@{/js/register.js}"></script>
   <style>
     /* 회원가입 페이지 스타일 수정 */
     #register-steps {
@@ -424,12 +425,26 @@
 
 <!-- JavaScript 로직 -->
 <script th:inline="javascript">
+  // 서버 설정
+  const API_BASE_URL = 'http://localhost:8080'; // LOCAL TEST
+  // const API_BASE_URL = 'https://freemates.suhsaechan.me';
+
+  // API 경로
+  const API_PATHS = {
+    MAIL_SEND: '/api/mail/send',
+    MAIL_VERIFY: '/api/mail/verify',
+    AUTH_REGISTER: '/api/auth/register',
+    AUTH_DUPLICATE_USERNAME: '/api/auth/duplicate/username'
+  };
+
+  // 전역 변수
   let currentStep = 1;
   const totalSteps = 3;
   let emailVerified = false;
   let passwordValid = false;
   let timerInterval;
   let emailSent = false;
+  let username = ''; // 아이디 저장용 변수
 
   $(document).ready(function() {
     // 초기 설정: 모든 스텝의 상태 설정
@@ -440,6 +455,19 @@
 
     // URL 파라미터에서 이메일 인증 상태 확인
     checkEmailVerificationFromURL();
+
+    // 아이디 입력 필드 추가 (아직 없는 경우)
+    if ($('#username').length === 0) {
+      $('#step2').find('form').prepend(`
+        <div class="form-group">
+          <label for="username" class="form-label">아이디</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" name="username" class="form-control" placeholder="사용할 아이디를 입력해주세요." required>
+          </div>
+          <div class="invalid-feedback" id="username-feedback">아이디를 입력해주세요.</div>
+        </div>
+      `);
+    }
   });
 
   // URL에서 이메일 인증 상태 확인 (이메일 인증 링크를 클릭하고 돌아왔을 때)
@@ -453,10 +481,24 @@
       $('#email').val(email);
       $('#email').prop('disabled', true);
       $('#sendEmailBtn').hide();
-      $('#verifyEmailBtn').show();
 
-      // 인증 코드 대기 중인 상태로 설정
-      emailSent = true;
+      // 인증 완료 처리
+      emailVerified = true;
+
+      // UI 업데이트
+      $('#verification-success').show();
+      $('#verification-error').hide();
+      $('#verifyEmailBtn').prop('disabled', true).text('인증완료').show();
+      $('.timer-container').hide();
+      $('#resendEmailBtn').hide();
+
+      // 인증 성공 상태 세션 저장
+      const verifiedEmails = JSON.parse(sessionStorage.getItem('verifiedEmails') || '{}');
+      verifiedEmails[email] = true;
+      sessionStorage.setItem('verifiedEmails', JSON.stringify(verifiedEmails));
+
+      // 버튼 상태 업데이트
+      updateButtonState(1);
     }
   }
 
@@ -568,57 +610,61 @@
         return;
       }
 
-      // TODO: 이메일 중복 확인 및 인증 메일 발송 API 호출
-      // $.ajax({
-      //   url: '/api/auth/send-verification',
-      //   type: 'POST',
-      //   data: { email: email },
-      //   success: function(response) {
-      //     // 성공 시 UI 업데이트
-      //   },
-      //   error: function(error) {
-      //     // 에러 처리
-      //   }
-      // });
+      // 이메일 인증메일 발송 API 호출
+      $.ajax({
+        url: API_BASE_URL + API_PATHS.MAIL_SEND,
+        type: 'GET',
+        data: { mail: email },
+        beforeSend: function() {
+          // 로딩 표시
+          console.log('이메일 발송 요청 중...');
+        },
+        success: function(response) {
+          // 이메일 전송 성공
+          alert('인증메일이 발송되었습니다. 이메일을 확인해주세요.');
 
-      // 이메일 전송 성공 처리 (실제 구현 시 ajax 성공 콜백에서 처리)
-      alert('인증메일이 발송되었습니다. 이메일을 확인해주세요.');
+          // 이메일 필드 비활성화 및 UI 업데이트
+          $('#email').prop('disabled', true);
+          $('.timer-container').show();
+          $('#verifyEmailBtn').show();
+          $('#resendEmailBtn').show();
 
-      // 이메일 필드 비활성화 및 UI 업데이트
-      $('#email').prop('disabled', true);
-      $('.timer-container').show();
-      $('#verifyEmailBtn').show();
-      $('#resendEmailBtn').show();
+          // 타이머 시작
+          startTimer();
 
-      // 타이머 시작
-      startTimer();
+          // 인증 메일 발송 상태 업데이트
+          emailSent = true;
+        },
+        error: function(xhr) {
+          // 에러 처리
+          const errorMessage = xhr.responseText || '이메일 발송 중 오류가 발생했습니다.';
 
-      // 인증 메일 발송 상태 업데이트
-      emailSent = true;
+          if (xhr.status === 400 && errorMessage.includes('DUPLICATE_EMAIL')) {
+            alert('이미 가입된 이메일입니다.');
+          } else if (xhr.status === 400 && errorMessage.includes('INVALID_EMAIL')) {
+            alert('유효하지 않은 이메일 주소입니다.');
+          } else {
+            alert('이메일 발송 중 오류가 발생했습니다. 다시 시도해주세요.');
+          }
+        },
+        complete: function() {
+          // 로딩 종료
+          console.log('이메일 발송 요청 완료');
+        }
+      });
     });
 
     // 이메일 인증 확인 버튼
     $('#verifyEmailBtn').click(function() {
-      // TODO: 서버에서 인증 상태를 확인하는 API 호출
-      // $.ajax({
-      //   url: '/api/auth/verify-email',
-      //   type: 'POST',
-      //   data: {
-      //     email: $('#email').val()
-      //   },
-      //   success: function(response) {
-      //     // 성공 시 처리
-      //   },
-      //   error: function(error) {
-      //     // 에러 처리
-      //   }
-      // });
+      const email = $('#email').val();
 
-      // 임시 구현: 성공 케이스 처리
-      // 실제 구현에서는 위의 ajax 콜백에서 처리
-      const success = true; // 임의로 성공 처리
+      // 실제로는 서버에서 인증 상태를 확인하는 API가 필요하지만,
+      // 현재 시스템은 이메일 링크를 클릭하면 자동으로 인증이 완료되는 방식이므로
+      // 세션에 저장된 인증 상태를 확인하는 방식으로 진행
+      const verifiedEmails = JSON.parse(sessionStorage.getItem('verifiedEmails') || '{}');
+      const isVerified = verifiedEmails[email] === true;
 
-      if (success) {
+      if (isVerified) {
         // 인증 성공 시
         emailVerified = true;
         clearInterval(timerInterval);
@@ -642,36 +688,42 @@
 
     // 이메일 재전송 버튼
     $('#resendEmailBtn').click(function() {
-      // TODO: 재발송 API 호출
-      // $.ajax({
-      //   url: '/api/auth/resend-verification',
-      //   type: 'POST',
-      //   data: { email: $('#email').val() },
-      //   success: function(response) {
-      //     // 성공 시 처리
-      //   },
-      //   error: function(error) {
-      //     // 에러 처리
-      //   }
-      // });
+      const email = $('#email').val();
 
-      // 임시 구현
-      clearInterval(timerInterval);
+      // 이메일 재발송 API 호출
+      $.ajax({
+        url: API_BASE_URL + API_PATHS.MAIL_SEND,
+        type: 'GET',
+        data: { mail: email },
+        beforeSend: function() {
+          // 로딩 표시
+          console.log('이메일 재발송 요청 중...');
+        },
+        success: function(response) {
+          // 타이머 초기화 및 재시작
+          clearInterval(timerInterval);
+          $('.timer-container').show();
+          $('#timer').css('color', '#FF0000');
+          startTimer();
 
-      // 타이머 초기화 및 재시작
-      $('.timer-container').show();
-      $('#timer').css('color', '#FF0000');
-      startTimer();
+          // 알림
+          alert('인증메일이 재발송되었습니다.');
 
-      // 알림
-      alert('인증메일이 재발송되었습니다.');
+          // 상태 메시지 초기화
+          $('#verification-success').hide();
+          $('#verification-error').hide();
 
-      // 상태 메시지 초기화
-      $('#verification-success').hide();
-      $('#verification-error').hide();
-
-      // 인증 버튼 초기화
-      $('#verifyEmailBtn').prop('disabled', false).text('인증 확인');
+          // 인증 버튼 초기화
+          $('#verifyEmailBtn').prop('disabled', false).text('인증 확인');
+        },
+        error: function() {
+          alert('이메일 재발송 중 오류가 발생했습니다. 다시 시도해주세요.');
+        },
+        complete: function() {
+          // 로딩 종료
+          console.log('이메일 재발송 요청 완료');
+        }
+      });
     });
 
     // 비밀번호 유효성 검사
@@ -714,6 +766,35 @@
       }
 
       updateButtonState(1);
+    });
+
+    // 아이디 중복 확인 (2단계에서)
+    $(document).on('blur', '#username', function() {
+      const usernameValue = $(this).val();
+      if (!usernameValue) {
+        showError(this, '아이디를 입력해주세요.');
+        return;
+      }
+
+      // 아이디 중복 확인 API 호출
+      $.ajax({
+        url: API_BASE_URL + API_PATHS.AUTH_DUPLICATE_USERNAME,
+        type: 'GET',
+        data: { username: usernameValue },
+        success: function(response) {
+          if (response === true) {
+            showError('#username', '이미 사용 중인 아이디입니다.');
+          } else {
+            hideError('#username');
+            username = usernameValue; // 사용 가능한 아이디 저장
+          }
+          updateStep2ButtonState();
+        },
+        error: function() {
+          showError('#username', '아이디 중복 확인 중 오류가 발생했습니다.');
+          updateStep2ButtonState();
+        }
+      });
     });
 
     // 스텝 2: 회원 정보 입력 (닉네임, 성별, 출생년도)
@@ -776,33 +857,99 @@
       if (currentStep < totalSteps) {
         goToStep(currentStep + 1, 1); // 1은 다음으로 이동
       } else {
-        // TODO: 회원가입 API 호출
-        // $.ajax({
-        //   url: '/api/auth/register',
-        //   type: 'POST',
-        //   contentType: 'application/json',
-        //   data: JSON.stringify({
-        //     email: $('#email').val(),
-        //     password: $('#password').val(),
-        //     nickname: $('#nickname').val(),
-        //     gender: $('#gender').val(),
-        //     birthYear: $('#birthYear').val(),
-        //     marketingConsent: $('input[name="marketing"]').is(':checked')
-        //   }),
-        //   success: function(response) {
-        //     alert('회원가입이 완료되었습니다!');
-        //     window.location.href = '/login';
-        //   },
-        //   error: function(error) {
-        //     alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
-        //   }
-        // });
+        // 회원가입 API 호출
+        const userData = {
+          username: $('#username').val(),
+          password: $('#password').val(),
+          nickname: $('#nickname').val(),
+          email: $('#email').val(),
+          gender: $('#gender').val() === 'male' ? 'MALE' : 'FEMALE',
+          age: calculateAge(parseInt($('#birthYear').val()))
+        };
 
-        // 임시 구현
-        alert('회원가입이 완료되었습니다!');
-        window.location.href = '/login';
+        $.ajax({
+          url: API_BASE_URL + API_PATHS.AUTH_REGISTER,
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(userData),
+          beforeSend: function() {
+            // 버튼 비활성화 및 로딩 표시
+            $('#step3-btn').prop('disabled', true);
+            console.log('회원가입 요청 중...');
+          },
+          success: function(response) {
+            alert('회원가입이 완료되었습니다!');
+            window.location.href = '/login';
+          },
+          error: function(xhr) {
+            // 에러 처리
+            const errorMessage = xhr.responseText || '회원가입 중 오류가 발생했습니다.';
+
+            if (xhr.status === 400 && errorMessage.includes('DUPLICATE_NICKNAME')) {
+              alert('이미 사용 중인 닉네임입니다.');
+            } else if (xhr.status === 400 && errorMessage.includes('INVALID_AGE')) {
+              alert('유효하지 않은 나이입니다. 18세 이상 90세 이하만 가입 가능합니다.');
+            } else {
+              alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+          },
+          complete: function() {
+            // 버튼 다시 활성화 및 로딩 종료
+            $('#step3-btn').prop('disabled', false);
+            console.log('회원가입 요청 완료');
+          }
+        });
       }
     });
+
+    // 이메일 인증 확인 버튼
+    $('#verifyEmailBtn').click(function() {
+      const email = $('#email').val();
+
+      if (!email) {
+        showError('#email', '이메일을 입력해주세요.');
+        return;
+      }
+
+      // 인증 상태 확인 API 호출
+      $.ajax({
+        url: API_BASE_URL + '/api/mail/check-verification',
+        type: 'GET',
+        data: { mail: email },
+        beforeSend: function() {
+          // 로딩 표시
+          $('#verifyEmailBtn').prop('disabled', true).text('확인 중...');
+        },
+        success: function(isVerified) {
+          if (isVerified === true) {
+            // 인증 성공 시
+            emailVerified = true;
+            clearInterval(timerInterval);
+
+            // UI 업데이트
+            $('.timer-container').hide();
+            $('#resendEmailBtn').hide();
+            $('#verification-success').show();
+            $('#verification-error').hide();
+            $('#verifyEmailBtn').prop('disabled', true).text('인증완료');
+
+            // 다음 버튼 상태 업데이트
+            updateButtonState(1);
+          } else {
+            // 인증 실패 시
+            emailVerified = false;
+            $('#verification-success').hide();
+            $('#verification-error').show();
+            $('#verifyEmailBtn').prop('disabled', false).text('인증 확인');
+          }
+        },
+        error: function() {
+          alert('인증 상태 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
+          $('#verifyEmailBtn').prop('disabled', false).text('인증 확인');
+        }
+      });
+    });
+
   }
 
   function updateButtonState(step) {
@@ -813,13 +960,14 @@
   }
 
   function updateStep2ButtonState() {
+    const usernameValid = $('#username').val().length > 0 && !$('#username').hasClass('is-invalid');
     const nicknameValid = $('#nickname').val().length > 0;
     const genderSelected = $('#gender').val() !== null && $('#gender').val() !== "";
     const birthYearValid = $('#birthYear').val().length === 4 &&
         Number($('#birthYear').val()) >= 1900 &&
         Number($('#birthYear').val()) <= new Date().getFullYear();
 
-    $('#step2-btn').prop('disabled', !(nicknameValid && genderSelected && birthYearValid));
+    $('#step2-btn').prop('disabled', !(usernameValid && nicknameValid && genderSelected && birthYearValid));
   }
 
   function updateTermsButtonState() {
@@ -849,6 +997,11 @@
         updateButtonState(1);
       }
     }, 1000);
+  }
+
+  // 출생년도로 나이 계산
+  function calculateAge(birthYear) {
+    return new Date().getFullYear() - birthYear;
   }
 </script>
 </body>

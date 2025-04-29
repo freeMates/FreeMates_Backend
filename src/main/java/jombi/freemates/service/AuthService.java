@@ -89,12 +89,10 @@ public class AuthService {
    */
   public boolean duplicateUsername(String username) {
     try{
-      memberRepository.existsByUsername(username);
-      return true;
+      return memberRepository.existsByUsername(username);
     } catch (RuntimeException e) {
       return false;
     }
-
   }
 
   /**
@@ -116,8 +114,6 @@ public class AuthService {
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
-
-
     //토큰 반환
     return LoginResponse.builder()
         .accessToken(accessToken)
@@ -125,7 +121,5 @@ public class AuthService {
         .nickname(member.getNickname())
         .build();
   }
-
-
 
 }
