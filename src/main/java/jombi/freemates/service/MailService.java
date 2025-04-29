@@ -40,7 +40,7 @@ public class MailService {
   // Redis 이메일 코드 유효시간 : 3분
   private static final long EMAIL_CODE_EXPIRE_MIN = 3;
 
-h  // Redis 이메일 코드 키 접두사
+  // Redis 이메일 코드 키 접두사
   private static final String EMAIL_VERIFY_PREFIX = "verify:";
 
   // Redis 완료 상태 저장용 키 접두사
