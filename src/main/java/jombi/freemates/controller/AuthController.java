@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.LoginRequest;
@@ -185,11 +186,33 @@ public class AuthController {
           - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
           """
   )
-  @PostMapping("/login")
-  @LogMonitor
-  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-    return authService.login(request);
+  @PostMapping("/login/app")
+  public ResponseEntity<LoginResponse> loginApp(
+      @RequestBody LoginRequest request
+  ) {
+    LoginResponse loginResponse = authService.login(request);
+    return ResponseEntity.ok(loginResponse);
   }
+
+  @PostMapping("/login/web")
+  public ResponseEntity<?> loginWeb(
+      @RequestBody LoginRequest request,
+      HttpServletResponse response
+  ) {
+    LoginResponse loginResponse = authService.login(request);
+
+    // Set-Cookie
+    response.addHeader(HttpHeaders.SET_COOKIE,
+        authService.buildRefreshCookie(loginResponse.getRefreshToken()).toString());
+
+    // body에는 accessToken과 nickname만
+    Map<String,String> body = Map.of(
+        "accessToken", loginResponse.getAccessToken(),
+        "nickname",    loginResponse.getNickname()
+    );
+    return ResponseEntity.ok(body);
+  }
+
 
   /**
    * 토큰 재발급
@@ -209,7 +232,7 @@ public class AuthController {
         ## 인증 (JWT): **불필요**
 
         ## 요청(String)
-        - refreshToken
+        - refreshToken: 기존에 있는 'String' 다 지우고 리프래시토큰 넣어야 함.
 
         ## 반환
         - ResponseEntity<TokenResponse>
@@ -222,7 +245,7 @@ public class AuthController {
     """
   )
   @LogMonitor
-  public ResponseEntity<TokenResponse> refreshForApp(@RequestBody String refreshToken) {
+  public ResponseEntity<TokenResponse> refreshApp(@RequestBody String refreshToken) {
     TokenResponse tokenResponse = authService.refreshToken(refreshToken);
     return ResponseEntity.ok(tokenResponse);
   }

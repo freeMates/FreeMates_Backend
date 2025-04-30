@@ -116,7 +116,7 @@ public class AuthService {
   /**
    * 로그인
    */
-  public ResponseEntity<LoginResponse> login(LoginRequest request) {
+  public LoginResponse login(LoginRequest request) {
     // Authentication 생성
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
@@ -136,20 +136,19 @@ public class AuthService {
     // 토큰 저장
     refreshTokenRepository.save(new RefreshToken(member.getUsername(),refreshToken));
 
-    // RefreshToken을 Set-Cookie로 설정
-    ResponseCookie cookie = buildRefreshCookie(refreshToken);
+//    // RefreshToken을 Set-Cookie로 설정
+//    ResponseCookie cookie = buildRefreshCookie(refreshToken);
 
     // LoginResponse 생성 (accessToken + nickname)
-    LoginResponse loginResponse = LoginResponse.builder()
-        .accessToken(accessToken)
-        .nickname(member.getNickname()) // <- 멤버에서 가져온 닉네임
-        .build();
+
 
 
     //토큰 반환
-    return ResponseEntity.ok()
-        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-        .body(loginResponse);
+    return LoginResponse.builder()
+        .refreshToken(refreshToken)
+        .accessToken(accessToken)
+        .nickname(member.getNickname()) // <- 멤버에서 가져온 닉네임
+        .build();
   }
 
   /**
@@ -190,7 +189,7 @@ public class AuthService {
   }
 
   /**
-   * refresh토큰 쿠키 생성
+   * refresh 토큰 쿠키 생성
    *
    */
   public ResponseCookie buildRefreshCookie(String token) {

@@ -14,7 +14,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginResponse {
-
+  private String refreshToken;
   private String accessToken;
   private String nickname;
 }

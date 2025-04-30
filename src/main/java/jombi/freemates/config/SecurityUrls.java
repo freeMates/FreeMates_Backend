@@ -11,7 +11,8 @@ public class SecurityUrls {
   public static final List<String> AUTH_WHITELIST = Arrays.asList(
       // API
       "/api/auth/register",             // 회원가입
-      "/api/auth/login",               // 로그인
+      "/api/auth/login/app",
+      "/api/auth/login/web",        // 로그인
       "/api/auth/duplicate/username", // 아이디 중복
       "/api/auth/refresh/web",
       "/api/auth/refresh/app",
