@@ -116,4 +116,36 @@ public class MailController {
     String redirectUrl = mailService.validateCodeAndGetRedirectUrl(mail, uuidString);
     response.sendRedirect(redirectUrl);
   }
+
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-04-29",
+          author = Author.SUHSAECHAN,
+          issueNumber = 74,
+          description = "이메일 인증 상태 확인 API 추가"
+      )
+  })
+  @Operation(
+      summary = "이메일 인증 상태 확인",
+      description = """
+    ## 인증(JWT): **불필요**
+    
+    ## 설명
+    이메일이 인증되었는지 상태를 확인하는 API입니다.
+    클라이언트에서 이메일 인증 확인 버튼을 클릭했을 때 호출
+    
+    ## 요청 파라미터 (Query)
+    - **`mail`**: 이메일 주소 (예: test@test.com)
+    
+    ## 반환값
+    - **성공 시**: true (인증된 이메일)
+    - **실패 시**: false (인증되지 않은 이메일)
+    """
+  )
+  @GetMapping("/check-verification")
+  @LogMonitor
+  public ResponseEntity<Boolean> checkEmailVerification(@RequestParam String mail) {
+    return ResponseEntity.ok(mailService.isEmailVerified(mail));
+  }
+
 }

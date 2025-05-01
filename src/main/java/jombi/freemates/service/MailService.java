@@ -40,8 +40,14 @@ public class MailService {
   // Redis 이메일 코드 유효시간 : 3분
   private static final long EMAIL_CODE_EXPIRE_MIN = 3;
 
-  // Redis 이메일 코드 key 접두사(prefix)
-  private static final String EMAIL_CODE_PREFIX = "verify:";
+h  // Redis 이메일 코드 키 접두사
+  private static final String EMAIL_VERIFY_PREFIX = "verify:";
+
+  // Redis 완료 상태 저장용 키 접두사
+  private static final String EMAIL_VERIFIED_PREFIX = "verified:";
+
+  // Redis 인증 완료 상태 유효 기간 (24시간)
+  private static final long EMAIL_VERIFIED_EXPIRE_HOURS = 24;
 
   // 이메일 인증 BASE URL
   @Value("${freemates.host}")
@@ -92,7 +98,7 @@ public class MailService {
     String uuidString = CommonUtil.createCleanUuidString();
 
     // Redis에 인증 코드 저장 (유효시간: 3분)
-    redisTemplate.opsForValue().set(EMAIL_CODE_PREFIX + mail, uuidString, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
+    redisTemplate.opsForValue().set(EMAIL_VERIFY_PREFIX + mail, uuidString, EMAIL_CODE_EXPIRE_MIN, TimeUnit.MINUTES);
 
     // 메일 발송
     try {
@@ -112,7 +118,7 @@ public class MailService {
 
     try {
       // Redis에서 인증 코드 조회
-      String redisKey = EMAIL_CODE_PREFIX + mail;
+      String redisKey = EMAIL_VERIFY_PREFIX + mail;
       String savedUuidString = redisTemplate.opsForValue().get(redisKey);
 
       // null 또는 "null" 문자열 처리
@@ -126,12 +132,27 @@ public class MailService {
 
       // 인증 성공 시 Redis에서 코드 삭제
       redisTemplate.delete(redisKey);
-      log.info("이메일 인증 성공: {}", mail);
 
+      // 인증 완료 상태 저장 (24시간 유효)
+      redisTemplate.opsForValue().set(
+          EMAIL_VERIFIED_PREFIX + mail,
+          "true",
+          EMAIL_VERIFIED_EXPIRE_HOURS,
+          TimeUnit.HOURS
+      );
+
+      log.info("이메일 인증 성공: {}", mail);
       return REDIRECT_SUCCESS_URL;
     } catch (Exception e) {
       log.error("이메일 인증 중 오류 발생", e);
       return REDIRECT_FAIL_URL;
     }
+  }
+
+  // 이메일 인증 상태 확인
+  public boolean isEmailVerified(String mail) {
+    String verifiedKey = EMAIL_VERIFIED_PREFIX + mail;
+    String value = redisTemplate.opsForValue().get(verifiedKey);
+    return Boolean.TRUE.toString().equals(value);
   }
 }

@@ -105,12 +105,11 @@ public class AuthService {
    */
   public boolean duplicateUsername(String username) {
 
-      if(memberRepository.existsByUsername(username)){
-      return true;}
-      else{
-      return false;}
-
-
+    try{
+      return memberRepository.existsByUsername(username);
+    } catch (RuntimeException e) {
+      return false;
+    }
   }
 
   /**
@@ -132,16 +131,9 @@ public class AuthService {
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
-
+    
     // 토큰 저장
     refreshTokenRepository.save(new RefreshToken(member.getUsername(),refreshToken));
-
-//    // RefreshToken을 Set-Cookie로 설정
-//    ResponseCookie cookie = buildRefreshCookie(refreshToken);
-
-    // LoginResponse 생성 (accessToken + nickname)
-
-
 
     //토큰 반환
     return LoginResponse.builder()
@@ -200,13 +192,5 @@ public class AuthService {
         .sameSite("Strict")
         .build();
   }
-
-
-
-
-
-
-
-
 
 }

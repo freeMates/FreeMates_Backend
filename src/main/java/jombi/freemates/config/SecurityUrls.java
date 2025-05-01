@@ -18,12 +18,13 @@ public class SecurityUrls {
       "/api/auth/refresh/app",
       "/api/test/**",                  //FIXME: 테스트 API
       "/api/mail/send",                // 이메일 보내기
-      "/api/mail/verify",              // 이메일 인증
+      "/api/mail/verify/**",           // 이메일 인증
+      "/api/mail/check-verification/**",  // 이메일 인증 확인
       "/api/temp/**",                  //FIXME: 테스트 API
 
       // Swagger
       "/docs/**",                      // Swagger UI
-      "/v3/api-docs/**",              // Swagger API 문서
+      "/v3/api-docs/**",               // Swagger API 문서
 
       // WEB
       "/",                           // 기본 화면 > 로그인화면 리다이렉트
