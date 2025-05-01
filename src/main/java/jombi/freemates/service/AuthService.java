@@ -131,7 +131,7 @@ public class AuthService {
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
-    
+
     // 토큰 저장
     refreshTokenRepository.save(new RefreshToken(member.getUsername(),refreshToken));
 
@@ -139,7 +139,7 @@ public class AuthService {
     return LoginResponse.builder()
         .refreshToken(refreshToken)
         .accessToken(accessToken)
-        .nickname(member.getNickname()) // <- 멤버에서 가져온 닉네임
+        .nickname(member.getNickname())
         .build();
   }
 
