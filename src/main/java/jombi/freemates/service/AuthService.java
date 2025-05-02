@@ -3,9 +3,11 @@ package jombi.freemates.service;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
@@ -41,6 +43,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class AuthService {
 
   private final CustomUserDetailsService customUserDetailsService;
@@ -132,8 +135,9 @@ public class AuthService {
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
-    // 토큰 저장
-    refreshTokenRepository.save(new RefreshToken(member.getUsername(),refreshToken));
+    refreshTokenRepository.save(
+        new RefreshToken(refreshToken, member)
+    );
 
     //토큰 반환
     return LoginResponse.builder()
@@ -146,24 +150,25 @@ public class AuthService {
   /**
    * 리프레시 토큰 재발급
    */
-  public TokenResponse refreshToken(String refreshToken) {
+  public TokenResponse refresh(String refreshToken) {
     // refreshToken 유효성 검증
     if (!jwtUtil.validateToken(refreshToken)) {
-      throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    // refreshToken에서 username 추출
-    String username = jwtUtil.getUsernameFromToken(refreshToken);
+    // refreshToken에서 memberId 추출
+    UUID memberId = jwtUtil.getMemberIdFromToken(refreshToken);
 
-    // UserDetails 로드
-    UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+    Member member = memberRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
     // 저장된 RefreshToken과 비교
-    RefreshToken savedToken = refreshTokenRepository.findByUsername(username)
+    RefreshToken savedToken = refreshTokenRepository.findByMember(member)
         .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED));
     if (!savedToken.getRefreshToken().equals(refreshToken)) {
-      throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
+    CustomUserDetails userDetails = new CustomUserDetails(member);
 
     // 새 토큰 발급
     Authentication auth = new UsernamePasswordAuthenticationToken(
@@ -173,7 +178,7 @@ public class AuthService {
     String newRefreshToken = jwtUtil.generateToken(auth, JwtTokenType.REFRESH);
 
     // RefreshToken 업데이트
-    savedToken.update(newRefreshToken);
+    savedToken.setRefreshToken(newRefreshToken);
     refreshTokenRepository.save(savedToken);
 
     // 새 AccessToken + 새 RefreshToken 반환

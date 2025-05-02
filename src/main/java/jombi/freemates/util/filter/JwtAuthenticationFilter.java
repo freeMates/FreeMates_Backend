@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 import jombi.freemates.config.SecurityUrls;
 import jombi.freemates.service.CustomUserDetailsService;
 import jombi.freemates.util.JwtUtil;
@@ -43,10 +44,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     String token = getTokenStrFromBearer(request);
     if (token != null && jwtUtil.validateToken(token)) {
-      // 토큰에서 username 추출
-      String username = jwtUtil.getUsernameFromToken(token);
-      // username -> 사용자 정보를 조회
-      UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+      // 토큰에서 memberId 추출
+      UUID memberId = jwtUtil.getMemberIdFromToken(token);
+      // memberId -> 사용자 정보를 조회
+      UserDetails userDetails = customUserDetailsService.loadUserByUsername(memberId.toString());
       if (userDetails != null) {
         UsernamePasswordAuthenticationToken authentication =
             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
