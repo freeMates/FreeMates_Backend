@@ -195,7 +195,7 @@ public class AuthController {
   }
 
   @PostMapping("/login/web")
-  public ResponseEntity<?> loginWeb(
+  public LoginResponse loginWeb(
       @RequestBody LoginRequest request,
       HttpServletResponse response
   ) {
@@ -205,12 +205,10 @@ public class AuthController {
     response.addHeader(HttpHeaders.SET_COOKIE,
         authService.buildRefreshCookie(loginResponse.getRefreshToken()).toString());
 
-    // body에는 accessToken과 nickname만
-    Map<String,String> body = Map.of(
-        "accessToken", loginResponse.getAccessToken(),
-        "nickname",    loginResponse.getNickname()
-    );
-    return ResponseEntity.ok(body);
+    return LoginResponse.builder()
+        .accessToken(loginResponse.getAccessToken())
+        .nickname(loginResponse.getNickname())
+        .build();
   }
 
 
@@ -246,7 +244,7 @@ public class AuthController {
   )
   @LogMonitor
   public ResponseEntity<TokenResponse> refreshApp(@RequestBody String refreshToken) {
-    TokenResponse tokenResponse = authService.refreshToken(refreshToken);
+    TokenResponse tokenResponse = authService.refresh(refreshToken);
     return ResponseEntity.ok(tokenResponse);
   }
 
@@ -278,20 +276,22 @@ public class AuthController {
         - `REFRESH_TOKEN_EXPIRED`: RefreshToken이 만료되었거나 존재하지 않습니다.
     """
   )
-  public ResponseEntity<?> refreshWeb(@CookieValue(name="refreshToken", required=false) String cookieToken,
+  public TokenResponse refreshWeb(@CookieValue(name="refreshToken", required=false) String cookieToken,
       HttpServletResponse response) {
     if (cookieToken == null) {
       throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
     }
-    TokenResponse tokenResponse = authService.refreshToken(cookieToken);
+    TokenResponse tokenResponse = authService.refresh(cookieToken);
+
 
     // Set-Cookie
     response.addHeader(HttpHeaders.SET_COOKIE,
         authService.buildRefreshCookie(tokenResponse.getRefreshToken()).toString());
     // Body에는 accessToken만
-    return ResponseEntity.ok(
-        Collections.singletonMap("accessToken", tokenResponse.getAccessToken())
-    );
+    return TokenResponse.builder()
+        .accessToken(tokenResponse.getAccessToken())
+        .build();
+
   }
 
 

@@ -31,7 +31,9 @@ public enum ErrorCode {
 
   ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Access 토큰이 만료되었습니다."),
 
-  REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "RefreshToken이 만료되었거나 존재하지 않습니다."),
+  REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Refresh 토큰이 만료되었거나 존재하지 않습니다."),
+
+  INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "잘못된 Refresh 토큰입니다"),
 
   // Email
   INVALID_EMAIL(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일입니다"),
