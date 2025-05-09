@@ -13,8 +13,8 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponse {
-  private String refreshToken;
+public class TokenResponse {
   private String accessToken;
-  private String nickname;
+  private String refreshToken;
+
 }

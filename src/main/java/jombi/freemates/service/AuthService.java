@@ -1,6 +1,14 @@
 package jombi.freemates.service;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -8,7 +16,10 @@ import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
+import jombi.freemates.model.dto.TokenResponse;
 import jombi.freemates.model.postgres.Member;
+import jombi.freemates.model.postgres.RefreshToken;
+import jombi.freemates.repository.RefreshTokenRepository;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
@@ -18,17 +29,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.suhsaechan.suhlogger.util.SuhLogger;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class AuthService {
 
+  private final CustomUserDetailsService customUserDetailsService;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final MemberRepository memberRepository;
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
   private final AuthenticationManager authenticationManager;
@@ -88,6 +107,7 @@ public class AuthService {
    * 아이디 중복 확인
    */
   public boolean duplicateUsername(String username) {
+
     try{
       return memberRepository.existsByUsername(username);
     } catch (RuntimeException e) {
@@ -108,18 +128,102 @@ public class AuthService {
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
     Member member = userDetails.getMember();
 
-    //토큰 생성
+
+    // 토큰 생성
     // AccessToken 발급
     String accessToken = jwtUtil.generateToken(authentication, JwtTokenType.ACCESS);
     // RefreshToken 발급
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
+    refreshTokenRepository.save(
+        RefreshToken.builder()
+            .refreshToken(refreshToken)
+            .member(member)
+            .build()
+    );
+
     //토큰 반환
     return LoginResponse.builder()
-        .accessToken(accessToken)
         .refreshToken(refreshToken)
+        .accessToken(accessToken)
         .nickname(member.getNickname())
         .build();
+  }
+
+  /**
+   * 리프레시 토큰 재발급
+   */
+  public TokenResponse refresh(String refreshToken) {
+    // refreshToken 유효성 검증
+    if (!jwtUtil.validateToken(refreshToken)) {
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+    }
+
+    // refreshToken에서 memberId 추출
+    UUID memberId = jwtUtil.getMemberIdFromToken(refreshToken);
+
+    Member member = memberRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+    // 저장된 RefreshToken과 비교
+    RefreshToken savedToken = refreshTokenRepository.findByMember(member)
+        .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED));
+    if (!savedToken.getRefreshToken().equals(refreshToken)) {
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+    }
+    CustomUserDetails userDetails = new CustomUserDetails(member);
+
+    // 새 토큰 발급
+    Authentication auth = new UsernamePasswordAuthenticationToken(
+        userDetails, null, userDetails.getAuthorities()
+    );
+    String newAccessToken = jwtUtil.generateToken(auth, JwtTokenType.ACCESS);
+    String newRefreshToken = jwtUtil.generateToken(auth, JwtTokenType.REFRESH);
+
+    // RefreshToken 업데이트
+    savedToken.setRefreshToken(newRefreshToken);
+    refreshTokenRepository.save(savedToken);
+
+    // 새 AccessToken + 새 RefreshToken 반환
+    return TokenResponse.builder()
+        .accessToken(newAccessToken)
+        .refreshToken(newRefreshToken)
+        .build();
+  }
+
+  /**
+   * refresh 토큰 쿠키 생성
+   *
+   */
+  public ResponseCookie buildRefreshCookie(String token) {
+    return ResponseCookie.from("refreshToken", token)
+        .httpOnly(true).secure(true)
+        .path("/api/auth/refresh/web")
+        .maxAge(JwtTokenType.REFRESH.getDurationMilliseconds()/1000)
+        .sameSite("Strict")
+        .build();
+  }
+
+  /**
+   * 회원탈퇴(hard와 soft를 나눠서 탈퇴)
+   *
+   */
+
+  public void delete(UUID memberId, boolean hard) {
+    Member member = memberRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+    if (hard) {
+      // 연관된 RefreshToken도 제거
+      refreshTokenRepository.deleteByMember(member);
+      memberRepository.delete(member);  // 하드 딜리트
+    } else {
+      if (member.isDeleted()) {
+        throw new CustomException(ErrorCode.ALREADY_DELETED);
+      }
+      member.markDeleted();  // 소프트 딜리트 (isDeleted = true로 설정)
+      memberRepository.save(member);
+    }
   }
 
 }

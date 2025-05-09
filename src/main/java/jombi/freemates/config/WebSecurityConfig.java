@@ -2,8 +2,8 @@ package jombi.freemates.config;
 
 import jombi.freemates.service.CustomUserDetailsService;
 import jombi.freemates.util.filter.CustomAuthenticationEntryPoint;
-import jombi.freemates.util.filter.JwtAuthenticationFilter;
 import jombi.freemates.util.JwtUtil;
+import jombi.freemates.util.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

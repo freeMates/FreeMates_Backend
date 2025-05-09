@@ -71,7 +71,8 @@ public class MailController {
           date = "2025-05-26",
           author = Author.SUHSAECHAN,
           issueNumber = 63,
-          description = "이메일인증 성공/실패시 리다이렉션 html 추가 및 연결 로직 추가, 메소드명 수정, HTML CSS 고도화"
+          description = "이메일인증 성공/실패시 리다이렉션 html 추가 및 연결 로직 추가, "
+              + "메소드명 수정, HTML CSS 고도화"
       ),
       @ApiChangeLog(
           date = "2025-04-15",

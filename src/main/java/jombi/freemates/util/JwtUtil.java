@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.util.exception.CustomException;
@@ -35,13 +36,13 @@ public class JwtUtil {
   // token 생성 저장 : ACCESS, REFRESH 따로
   public String generateToken(Authentication authentication, JwtTokenType jwtTokenType) {
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-    String username = userDetails.getUsername();
+    String memberId = userDetails.getMember().getMemberId().toString();
     Date now = new Date();
 
     Date expiryDate = new Date(now.getTime() + jwtTokenType.getDurationMilliseconds());
 
     return Jwts.builder()
-        .setSubject(username)
+        .setSubject(memberId)
         .setIssuer(issuer)
         .setIssuedAt(now)
         .setExpiration(expiryDate)
@@ -49,18 +50,20 @@ public class JwtUtil {
         .compact();
   }
 
-  // token -> username 반환
-  public String getUsernameFromToken(String token) {
+  // token -> memberId(UUID) 반환
+  public UUID getMemberIdFromToken(String token) {
     Claims claims = Jwts.parserBuilder()
         .setSigningKey(getSigningKey())
         .build()
         .parseClaimsJws(token)
         .getBody();
+
+    String subject = claims.getSubject();
     try {
-      return String.valueOf(claims.getSubject());
+      return UUID.fromString(subject);
     } catch (IllegalArgumentException e) {
-      log.error(e.getMessage(), e);
-      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+      log.error("Invalid UUID in token subject: {}", subject, e);
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
   }
 
