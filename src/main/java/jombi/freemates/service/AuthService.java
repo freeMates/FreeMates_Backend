@@ -136,7 +136,10 @@ public class AuthService {
     String refreshToken = jwtUtil.generateToken(authentication, JwtTokenType.REFRESH);
 
     refreshTokenRepository.save(
-        new RefreshToken(refreshToken, member)
+        RefreshToken.builder()
+            .refreshToken(refreshToken)
+            .member(member)
+            .build()
     );
 
     //토큰 반환
@@ -182,7 +185,10 @@ public class AuthService {
     refreshTokenRepository.save(savedToken);
 
     // 새 AccessToken + 새 RefreshToken 반환
-    return new TokenResponse(newAccessToken, newRefreshToken);
+    return TokenResponse.builder()
+        .accessToken(newAccessToken)
+        .refreshToken(newRefreshToken)
+        .build();
   }
 
   /**
@@ -196,6 +202,28 @@ public class AuthService {
         .maxAge(JwtTokenType.REFRESH.getDurationMilliseconds()/1000)
         .sameSite("Strict")
         .build();
+  }
+
+  /**
+   * 회원탈퇴(hard와 soft를 나눠서 탈퇴)
+   *
+   */
+
+  public void delete(UUID memberId, boolean hard) {
+    Member member = memberRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+    if (hard) {
+      // 연관된 RefreshToken도 제거
+      refreshTokenRepository.deleteByMember(member);
+      memberRepository.delete(member);  // 하드 딜리트
+    } else {
+      if (member.isDeleted()) {
+        throw new CustomException(ErrorCode.ALREADY_DELETED);
+      }
+      member.markDeleted();  // 소프트 딜리트 (isDeleted = true로 설정)
+      memberRepository.save(member);
+    }
   }
 
 }

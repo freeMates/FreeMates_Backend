@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.LoginRequest;
@@ -16,6 +17,7 @@ import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.dto.TokenResponse;
 import jombi.freemates.service.AuthService;
+import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
 import jombi.freemates.util.exception.CustomException;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
   private final AuthService authService;
+  private final JwtUtil jwtUtil;
 
   /**
    * 회원가입
@@ -114,6 +118,40 @@ public class AuthController {
     RegisterResponse response = authService.register(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
+
+
+  /**
+   * 회원 삭제 (Soft & Hard 선택 가능)
+   */
+  @DeleteMapping("/delete")
+  @Operation(
+      summary = "회원 탈퇴",
+      description = """
+          ## 인증(JWT): **필요**
+          
+          ## 요청 쿼리 파라미터
+          - `hard` (boolean, optional): true로 설정하면 하드 딜리트 수행. 기본값은 false
+
+          ## 동작
+          - `hard=false` 또는 미설정 시: 소프트 딜리트 (isDeleted=true)
+          - `hard=true`인 경우: 완전 삭제
+
+          ## 반환
+          - ResponseEntity<Void> (상태코드 200 OK)
+
+          ## 에러 코드
+          - `MEMBER_NOT_FOUND`: 회원을 찾을 수 없음
+      """
+  )
+  @LogMonitor
+  public ResponseEntity<Void> deleteAccount(
+      @RequestParam(defaultValue = "false") boolean hard
+  ) {
+    UUID memberId = jwtUtil.getMemberId(); // 인증된 사용자 ID 추출
+    authService.delete(memberId, hard);
+    return ResponseEntity.ok().build();
+  }
+
 
   /**
    * 아이디 중복 확인
@@ -247,8 +285,6 @@ public class AuthController {
     TokenResponse tokenResponse = authService.refresh(refreshToken);
     return ResponseEntity.ok(tokenResponse);
   }
-
-
 
   @PostMapping("/refresh/web")
   @ApiChangeLogs({

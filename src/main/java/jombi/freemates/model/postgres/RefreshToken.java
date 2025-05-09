@@ -36,12 +36,5 @@ public class RefreshToken {
   @ManyToOne
   private Member member;
 
-  // 생성자
-  public RefreshToken(String refreshToken, Member member) {
-    this.refreshToken = refreshToken;
-    this.member      = member;
-  }
-
-
 
 }
