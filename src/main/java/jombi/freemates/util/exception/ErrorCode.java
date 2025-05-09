@@ -35,6 +35,11 @@ public enum ErrorCode {
 
   INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "잘못된 Refresh 토큰입니다"),
 
+  // Delete
+  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
+
+  ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 탈퇴한 회원입니다."),
+
   // Email
   INVALID_EMAIL(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일입니다"),
 

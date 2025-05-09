@@ -9,5 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
  Optional<RefreshToken> findByMember(Member member);
  Optional<RefreshToken> findByMember_MemberId(UUID memberId);
+ void deleteByMember(Member member);
 
 }
