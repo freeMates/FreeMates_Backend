@@ -16,6 +16,7 @@ import jombi.freemates.util.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -67,6 +68,19 @@ public class JwtUtil {
     }
   }
 
+  public UUID getMemberId() {
+    // Authentication 가져오기
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    // 인증 정보가 없거나 인증되지 않았으면 예외 발생
+    if (authentication == null || !authentication.isAuthenticated()) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    // MemberId 추출
+    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    return userDetails.getMember().getMemberId();
+  }
+
   public boolean validateToken(String token) {
     try {
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
@@ -77,4 +91,6 @@ public class JwtUtil {
     }
     return false;
   }
+
+
 }

@@ -36,4 +36,11 @@ public class Member extends BasePostgresEntity {
   private String nickname;
 
   private Role role;
+  // 탈퇴 되었는지 확인
+  private boolean isDeleted = false;
+
+  public void markDeleted() {
+    this.isDeleted = true;
+  }
+
 }
