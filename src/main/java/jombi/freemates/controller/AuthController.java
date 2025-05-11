@@ -16,6 +16,7 @@ import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
+import jombi.freemates.model.dto.TokenRequest;
 import jombi.freemates.model.dto.TokenResponse;
 import jombi.freemates.service.AuthService;
 import jombi.freemates.util.JwtUtil;
@@ -24,7 +25,10 @@ import jombi.freemates.util.docs.ApiChangeLogs;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.suhsaechan.suhlogger.annotation.LogMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -47,6 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
     description = "회원가입, 로그인 관련 API 제공"
 )
 @RestController
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -56,6 +61,8 @@ public class AuthController {
   /**
    * 회원가입
    * **/
+  @PostMapping("/register")
+  @LogMonitor
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-04-17",
@@ -113,9 +120,6 @@ public class AuthController {
           - 
           """
   )
-
-  @PostMapping("/register")
-  @LogMonitor
   public ResponseEntity<RegisterResponse> register(
       @RequestBody RegisterRequest request) {
     RegisterResponse response = authService.register(request);
@@ -127,6 +131,7 @@ public class AuthController {
    * 회원 삭제 (Soft & Hard 선택 가능)
    */
   @DeleteMapping("/delete")
+  @LogMonitor
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-05-11",
@@ -160,7 +165,6 @@ public class AuthController {
           - `MEMBER_NOT_FOUND`: 회원을 찾을 수 없음
       """
   )
-  @LogMonitor
   public ResponseEntity<Void> deleteAccount(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestParam(defaultValue = "false") boolean hard
@@ -173,6 +177,8 @@ public class AuthController {
   /**
    * 아이디 중복 확인
    * **/
+  @GetMapping("/duplicate/username")
+  @LogMonitor
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-04-17",
@@ -191,8 +197,6 @@ public class AuthController {
         - **맞을 시**: "true"
         - **틀릴 시**: "false"
           """)
-  @GetMapping("/duplicate/username")
-  @LogMonitor
   public Boolean duplicateUsername(@RequestParam String username) {
     return authService.duplicateUsername(username);
   }
@@ -201,6 +205,8 @@ public class AuthController {
   /**
    * 로그인
    * **/
+  @PostMapping("/login/app")
+  @LogMonitor
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-04-11",
@@ -241,7 +247,6 @@ public class AuthController {
           - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
           """
   )
-  @PostMapping("/login/app")
   public ResponseEntity<LoginResponse> loginApp(
       @RequestBody LoginRequest request
   ) {
@@ -250,6 +255,7 @@ public class AuthController {
   }
 
   @PostMapping("/login/web")
+  @LogMonitor
   public LoginResponse loginWeb(
       @RequestBody LoginRequest request,
       HttpServletResponse response
@@ -271,7 +277,14 @@ public class AuthController {
    * 토큰 재발급
    * **/
   @PostMapping("/refresh/app")
+  @LogMonitor
   @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-05-11",
+          author = Author.SUHSAECHAN,
+          issueNumber = 82,
+          description = "기존 @RequestBody를 String -> TokenRequest 객체로 변경"
+      ),
       @ApiChangeLog(
           date = "2025-05-11",
           author = Author.SUHSAECHAN,
@@ -290,8 +303,8 @@ public class AuthController {
       description = """
         ## 인증 (JWT): **불필요**
 
-        ## 요청(String)
-        - refreshToken: 기존에 있는 'String' 다 지우고 리프래시토큰 넣어야 함.
+        ## 요청(TokenRequest)
+        - refreshToken: 재발급에 필요한 refreshToken 값
 
         ## 반환
         - ResponseEntity<TokenResponse>
@@ -303,13 +316,13 @@ public class AuthController {
         - `ACCESS_TOKEN_EXPIRED`: AccessToken이 만료되었습니다.
     """
   )
-  @LogMonitor
-  public ResponseEntity<TokenResponse> refreshApp(@RequestBody String refreshToken) {
-    TokenResponse tokenResponse = authService.refresh(refreshToken);
+  public ResponseEntity<TokenResponse> refreshApp(@RequestBody TokenRequest request) {
+    TokenResponse tokenResponse = authService.refresh(request);
     return ResponseEntity.ok(tokenResponse);
   }
 
   @PostMapping("/refresh/web")
+  @LogMonitor
   @ApiChangeLogs({
       @ApiChangeLog(
           date = "2025-04-27",
@@ -335,12 +348,13 @@ public class AuthController {
         - `REFRESH_TOKEN_EXPIRED`: RefreshToken이 만료되었거나 존재하지 않습니다.
     """
   )
-  public TokenResponse refreshWeb(@CookieValue(name="refreshToken", required=false) String cookieToken,
+  public TokenResponse refreshWeb(@CookieValue(name="refreshToken", required=false) String cookieRefreshToken,
       HttpServletResponse response) {
-    if (cookieToken == null) {
-      throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+    if (cookieRefreshToken == null) {
+      log.error("RefreshToken is null");
+      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
-    TokenResponse tokenResponse = authService.refresh(cookieToken);
+    TokenResponse tokenResponse = authService.refresh(TokenRequest.builder().refreshToken(cookieRefreshToken).build());
 
 
     // Set-Cookie

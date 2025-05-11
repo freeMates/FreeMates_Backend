@@ -10,6 +10,7 @@ import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
+import jombi.freemates.model.dto.TokenRequest;
 import jombi.freemates.model.dto.TokenResponse;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.model.postgres.RefreshToken;
@@ -50,43 +51,44 @@ public class AuthService {
   /**
    * 회원가입
    */
-  public RegisterResponse register(RegisterRequest request){
+  public RegisterResponse register(RegisterRequest request) {
     int age = request.getAge();// 한국식 나이
     int currentYear = LocalDate.now().getYear();
-    int birthYear = currentYear - age+ 1;
+    int birthYear = currentYear - age + 1;
 
     // 중복 닉네임 검증
-    if(memberRepository.existsByNickname(request.getNickname())){
-      log.error("이미 사용중인 닉네임입니다. 요청 아이디: {}",request.getNickname());
+    if (memberRepository.existsByNickname(request.getNickname())) {
+      log.error("이미 사용중인 닉네임입니다. 요청 아이디: {}", request.getNickname());
       throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
     }
 
     // 정상나이 확인
-    if(age<MIN_AGE || age>MAX_AGE){
-      log.error("정상적인 나이 범위가 아닙니다 {}",age);
+    if (age < MIN_AGE || age > MAX_AGE) {
+      log.error("정상적인 나이 범위가 아닙니다 {}", age);
       throw new CustomException(ErrorCode.INVALID_AGE);
     }
-    try{
-    // 사용자 저장
-    Member savedMember = memberRepository.save(
-            Member.builder()
-            .username(request.getUsername())
-            .password(bCryptPasswordEncoder.encode(request.getPassword()))
-            .email(request.getEmail())
-            .birthYear(birthYear)
-            .gender(request.getGender())
-            .nickname(request.getNickname())
-            .role(Role.ROLE_USER)
-            .build());
+    try {
+      // 사용자 저장
+      Member savedMember = memberRepository.save(
+          Member.builder()
+              .username(request.getUsername())
+              .password(bCryptPasswordEncoder.encode(request.getPassword()))
+              .email(request.getEmail())
+              .birthYear(birthYear)
+              .gender(request.getGender())
+              .nickname(request.getNickname())
+              .role(Role.ROLE_USER)
+              .isDeleted(false)
+              .build());
 
-    SuhLogger.superLog(savedMember);
-    return RegisterResponse.builder()
+      SuhLogger.superLog(savedMember);
+      return RegisterResponse.builder()
           .username(savedMember.getUsername())
           .memberId(savedMember.getMemberId())
           .email(savedMember.getEmail())
           .nickname(savedMember.getNickname())
-          .build();}
-    catch(Exception e){
+          .build();
+    } catch (Exception e) {
       throw new CustomException(ErrorCode.INVALID_REQUEST);
 
     }
@@ -98,7 +100,7 @@ public class AuthService {
    */
   public boolean duplicateUsername(String username) {
 
-    try{
+    try {
       return memberRepository.existsByUsername(username);
     } catch (RuntimeException e) {
       return false;
@@ -111,13 +113,12 @@ public class AuthService {
   public LoginResponse login(LoginRequest request) {
     // Authentication 생성
     Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword())
+        new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
     );
 
     // Member 추출
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
     Member member = userDetails.getMember();
-
 
     // 토큰 생성
     // AccessToken 발급
@@ -143,8 +144,9 @@ public class AuthService {
   /**
    * 리프레시 토큰 재발급
    */
-  public TokenResponse refresh(String refreshToken) {
+  public TokenResponse refresh(TokenRequest tokenRequest) {
     // refreshToken 유효성 검증
+    String refreshToken = tokenRequest.getRefreshToken();
     if (!jwtUtil.validateToken(refreshToken)) {
       throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
@@ -183,20 +185,18 @@ public class AuthService {
 
   /**
    * refresh 토큰 쿠키 생성
-   *
    */
   public ResponseCookie buildRefreshCookie(String token) {
     return ResponseCookie.from("refreshToken", token)
         .httpOnly(true).secure(true)
         .path("/api/auth/refresh/web")
-        .maxAge(JwtTokenType.REFRESH.getDurationMilliseconds()/1000)
+        .maxAge(JwtTokenType.REFRESH.getDurationMilliseconds() / 1000)
         .sameSite("Strict")
         .build();
   }
 
   /**
    * 회원탈퇴(hard와 soft를 나눠서 탈퇴)
-   *
    */
   public void delete(Member member, boolean hard) {
     if (hard) {
