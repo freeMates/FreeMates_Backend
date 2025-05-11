@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.JwtTokenType;
+import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
 import jombi.freemates.model.dto.RegisterRequest;
@@ -28,6 +29,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -145,10 +148,10 @@ public class AuthController {
   )
   @LogMonitor
   public ResponseEntity<Void> deleteAccount(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestParam(defaultValue = "false") boolean hard
   ) {
-    UUID memberId = jwtUtil.getMemberId(); // 인증된 사용자 ID 추출
-    authService.delete(memberId, hard);
+    authService.delete(customUserDetails.getMember(), hard);
     return ResponseEntity.ok().build();
   }
 
@@ -255,6 +258,12 @@ public class AuthController {
    * **/
   @PostMapping("/refresh/app")
   @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-04-27",
+          author = Author.LEEDAYE,
+          issueNumber = 53,
+          description = "앱용 토큰 저장 로직 수정"
+      ),
       @ApiChangeLog(
           date = "2025-04-27",
           author = Author.LEEDAYE,

@@ -20,24 +20,25 @@ public class Member extends BasePostgresEntity {
   private UUID memberId;
 
   @Column(nullable = false, unique = true)
-  private String username; // JWT 토큰 subject
+  private String username; // 로그인 ID
 
   @Column(nullable = false)
   private String password;
 
   private Integer birthYear;
 
-  @Enumerated(EnumType.STRING)//MALE, FEMALE
-  private Gender gender;
+  @Enumerated(EnumType.STRING)
+  private Gender gender; // MALE, FEMALE
 
   @Column(nullable = false, unique = true)
   private String email;
+
   @Column(nullable = false, unique = true)
   private String nickname;
 
   private Role role;
-  // 탈퇴 되었는지 확인
-  private boolean isDeleted = false;
+
+  private boolean isDeleted = false; // 탈퇴 되었는지 확인
 
   public void markDeleted() {
     this.isDeleted = true;

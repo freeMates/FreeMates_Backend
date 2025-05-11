@@ -1,14 +1,8 @@
 package jombi.freemates.service;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.constant.Role;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -29,16 +23,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.suhsaechan.suhlogger.util.SuhLogger;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -159,10 +149,10 @@ public class AuthService {
       throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    // refreshToken에서 memberId 추출
-    UUID memberId = jwtUtil.getMemberIdFromToken(refreshToken);
+    // refreshToken에서 username 추출
+    String username = jwtUtil.getUsernameFromToken(refreshToken);
 
-    Member member = memberRepository.findByMemberId(memberId)
+    Member member = memberRepository.findByUsername(username)
         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
     // 저장된 RefreshToken과 비교
@@ -208,11 +198,7 @@ public class AuthService {
    * 회원탈퇴(hard와 soft를 나눠서 탈퇴)
    *
    */
-
-  public void delete(UUID memberId, boolean hard) {
-    Member member = memberRepository.findByMemberId(memberId)
-        .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
+  public void delete(Member member, boolean hard) {
     if (hard) {
       // 연관된 RefreshToken도 제거
       refreshTokenRepository.deleteByMember(member);

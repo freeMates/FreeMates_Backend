@@ -11,16 +11,19 @@ import java.util.Date;
 import java.util.UUID;
 import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.repository.MemberRepository;
 import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-@Component
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class JwtUtil {
 
   @Value("${jwt.secret-key}")
@@ -37,13 +40,16 @@ public class JwtUtil {
   // token 생성 저장 : ACCESS, REFRESH 따로
   public String generateToken(Authentication authentication, JwtTokenType jwtTokenType) {
     CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-    String memberId = userDetails.getMember().getMemberId().toString();
+    String username = userDetails.getMember().getUsername();
     Date now = new Date();
 
     Date expiryDate = new Date(now.getTime() + jwtTokenType.getDurationMilliseconds());
 
+    log.info("{} 토큰 생성: 사용자 이름 {}", jwtTokenType, username);
+    log.debug("토큰 유효 기간: {}부터 {}까지", now, expiryDate);
+
     return Jwts.builder()
-        .setSubject(memberId)
+        .setSubject(username)
         .setIssuer(issuer)
         .setIssuedAt(now)
         .setExpiration(expiryDate)
@@ -51,46 +57,28 @@ public class JwtUtil {
         .compact();
   }
 
-  // token -> memberId(UUID) 반환
-  public UUID getMemberIdFromToken(String token) {
+  // JWT Token -> username
+  public String getUsernameFromToken(String token) {
     Claims claims = Jwts.parserBuilder()
         .setSigningKey(getSigningKey())
         .build()
         .parseClaimsJws(token)
         .getBody();
 
-    String subject = claims.getSubject();
-    try {
-      return UUID.fromString(subject);
-    } catch (IllegalArgumentException e) {
-      log.error("Invalid UUID in token subject: {}", subject, e);
-      throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
-    }
-  }
-
-  public UUID getMemberId() {
-    // Authentication 가져오기
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    // 인증 정보가 없거나 인증되지 않았으면 예외 발생
-    if (authentication == null || !authentication.isAuthenticated()) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED);
-    }
-
-    // MemberId 추출
-    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-    return userDetails.getMember().getMemberId();
+    String username = claims.getSubject();
+    log.debug("토큰에서 사용자 이름 추출: {}", username);
+    return username;
   }
 
   public boolean validateToken(String token) {
     try {
       Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+      log.debug("JWT 토큰 검증 성공");
       return true;
     } catch (JwtException | IllegalArgumentException e) {
       // 토큰 검증 실패 시
-      log.error(e.getMessage(), e);
+      log.error("JWT 토큰 검증 실패: {}", e.getMessage());
     }
     return false;
   }
-
-
 }
