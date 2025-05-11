@@ -1,0 +1,46 @@
+name: PROJECT-CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Java 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Gradle Wrapper 실행권한 부여
+        run: chmod +x gradlew
+
+      - name: application-suh.yml 생성
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_SUH_YML }}" > ./src/main/resources/application-suh.yml
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test -Dspring.profiles.active=suh
+
+      - name: 빌드 결과 PR에 코멘트 달기
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const outcome = '${{ job.status }}' === 'success' ? '✅ 빌드 성공' : '❌ 빌드 실패';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### PR 빌드 검증 결과: ${outcome}\n\n빌드 검증이 완료되었습니다.`
+            });
