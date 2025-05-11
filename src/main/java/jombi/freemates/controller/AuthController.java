@@ -127,6 +127,20 @@ public class AuthController {
    * 회원 삭제 (Soft & Hard 선택 가능)
    */
   @DeleteMapping("/delete")
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-05-11",
+          author = Author.SUHSAECHAN,
+          issueNumber = 82,
+          description = "@AuthenticationPrincipal 추가 > UserDetail Member 추출 방식으로 변경"
+      ),
+      @ApiChangeLog(
+          date = "2025-05-09",
+          author = Author.LEEDAYE,
+          issueNumber = 53,
+          description = "회원탈퇴 API 추가"
+      )
+  })
   @Operation(
       summary = "회원 탈퇴",
       description = """
@@ -259,10 +273,10 @@ public class AuthController {
   @PostMapping("/refresh/app")
   @ApiChangeLogs({
       @ApiChangeLog(
-          date = "2025-04-27",
-          author = Author.LEEDAYE,
-          issueNumber = 53,
-          description = "앱용 토큰 저장 로직 수정"
+          date = "2025-05-11",
+          author = Author.SUHSAECHAN,
+          issueNumber = 82,
+          description = "memberId -> username 으로 토큰 로직 변경"
       ),
       @ApiChangeLog(
           date = "2025-04-27",
