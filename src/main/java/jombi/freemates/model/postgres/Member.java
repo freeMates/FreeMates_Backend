@@ -38,6 +38,7 @@ public class Member extends BasePostgresEntity {
 
   private Role role;
 
+  @Builder.Default
   private boolean isDeleted = false; // 탈퇴 되었는지 확인
 
   public void markDeleted() {
