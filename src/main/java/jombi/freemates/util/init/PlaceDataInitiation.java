@@ -1,0 +1,38 @@
+package jombi.freemates.util.init;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import jombi.freemates.model.constant.CategoryType;
+import jombi.freemates.model.dto.KaKaoDocument;
+import jombi.freemates.model.postgres.Place;
+import jombi.freemates.repository.PlaceRepository;
+import jombi.freemates.service.PlaceService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PlaceDataInitiation{
+  private final PlaceService placeService;
+  private final PlaceRepository placeRepository;
+
+  /**
+   *
+   * DB가 비어 있을 때나 관리자가 호출 시 kakao API 를 호출해 저장
+   */
+  @EventListener(ApplicationReadyEvent.class)
+  public void onAppReady() {
+    log.debug("장소 개수 {}", placeRepository.count());
+    if (placeRepository.count() == 0) {
+      placeService.doRefresh();
+    }
+  }
+}
+
