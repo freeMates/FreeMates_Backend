@@ -1,5 +1,6 @@
 package jombi.freemates.service;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import jombi.freemates.model.postgres.Place;
@@ -99,7 +100,7 @@ public class PlaceService {
    * 실제 카카오 API → DB 동기화
    * 비동기처리
    * */
-
+  @Transactional
   @Async("applicationTaskExecutor")
   public void doRefresh() {
     List<KakaoDocument> docs = fetchPlaces()
@@ -126,9 +127,18 @@ public class PlaceService {
             .build())
         .collect(Collectors.toList());
 
-    placeRepository.saveAll(places);
+       try {
+           log.info("장소 데이터 {} 개 저장 시작", places.size());
+           placeRepository.saveAll(places);
+           log.info("장소 데이터 저장 완료");
+         } catch (Exception e) {
+           log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
+           throw e;
+         }
+
   }
 
+  @Transactional
   public void deleteAllAndRefresh() {
     placeRepository.deleteAll();
     doRefresh();
