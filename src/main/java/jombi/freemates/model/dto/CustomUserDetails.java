@@ -3,6 +3,7 @@ package jombi.freemates.model.dto;
 
 import jombi.freemates.model.postgres.Member;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+@Getter
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
@@ -30,7 +32,4 @@ public class CustomUserDetails implements UserDetails {
     return member.getUsername();
   }
 
-  public Member getMember() {
-    return member;
-  }
 }

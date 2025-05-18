@@ -21,20 +21,11 @@ public class CustomUserDetailsService implements UserDetailsService {
   private final MemberRepository memberRepository;
 
   @Override
-  public UserDetails loadUserByUsername(String idOrUsername) throws UsernameNotFoundException {
-    // UUID 파싱 시도: 토큰 인증 경로
-    try {
-      UUID memberId = UUID.fromString(idOrUsername);
-      Member member = memberRepository.findByMemberId(memberId)
-          .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
-      return new CustomUserDetails(member);
-    } catch (IllegalArgumentException e) {
-      // idOrUsername이 UUID 포맷이 아니면 로그인 경로(username)
-      Member member = memberRepository.findByUsername(idOrUsername)
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    // username (로그인 ID)
+      Member member = memberRepository.findByUsername(username)
           .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
       return new CustomUserDetails(member);
-    }
   }
 
 }
