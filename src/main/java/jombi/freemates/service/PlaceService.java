@@ -1,8 +1,7 @@
 package jombi.freemates.service;
 
-import static org.locationtech.jts.geom.util.GeometryMapper.flatMap;
 
-
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import jombi.freemates.model.postgres.Place;
@@ -50,14 +49,18 @@ public class PlaceService {
 
     return Flux.fromIterable(CATEGORIES)
         // 카테고리 코드로 변환
-        .flatMap(categoryType -> {
-          String categoryCode = categoryType.getKakaoCodes().stream().findFirst().orElseThrow();
-          return fetchAllPagesFor(categoryCode);
-        })
+        .concatMap(categoryType ->
+            // 그 카테고리가 가진 모든 kakaoCodes 에 대해
+            Flux.fromIterable(categoryType.getKakaoCodes())
+                // 코드 하나당 전체 페이지를 조회
+                .concatMap(this::fetchAllPagesFor)
+        )
         // 카테고리 그룹 코드로 필터링
-        .filter(doc -> CATEGORIES.stream()
-            .anyMatch(cat -> cat.getKakaoCodes().contains(doc.getCategoryGroupCode())))
-        // 중복 제거
+        .filter(doc ->
+            CATEGORIES.stream()
+                .anyMatch(cat -> cat.getKakaoCodes()
+                    .contains(doc.getCategoryGroupCode()))
+        )        // 중복 제거
         .distinct(KakaoDocument::getId)
         // 리스트로 수집
         .collectList()
@@ -75,14 +78,9 @@ public class PlaceService {
     // 1페이지부터 시작
     return Mono.just(1)
         // expand 로 “다음 페이지 번호”를 스트림으로 확장
-        .expand(currentPage -> {
-          if (currentPage < MAX_PAGE && !Thread.currentThread().isInterrupted()) {
-            return Mono.just(currentPage + 1);
-          }
-          return Mono.empty();
-        })
+        .expand(page -> page < MAX_PAGE ? Mono.just(page + 1) : Mono.empty())
         // 각 page 번호마다 API 호출
-        .flatMap(page ->
+        .concatMap(page ->
             kakaoWebClient.get()
                 .uri(b -> b.path("/v2/local/search/category.json")
                     .queryParam("category_group_code", categoryCode)
@@ -102,21 +100,16 @@ public class PlaceService {
                 })
         )
         // is_end=true 이면 그 페이지까지 수집 후 스트림 종료
-        .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd()==true)
+        .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd())
         // KaKaoResponse.documents 를 펼쳐서 Flux<KaKaoDocument> 로 반환
         .flatMapIterable(KakaoResponse::getDocuments);
   }
 
   /**
-   *
-   * 실제 카카오 API → DB 동기화
-   * 동기처리
-   * */
-  @Transactional
-  public void doRefresh() {
-    fetchPlaces()
-        .timeout(java.time.Duration.ofMinutes(2))
-        .flatMapMany(docs -> Flux.fromIterable(docs))
+   * KakaoDocument → Place 엔티티로 변환
+   */
+  private List<Place> buildPlaces(List<KakaoDocument> docs) {
+    return docs.stream()
         .map(doc -> Place.builder()
             .id(doc.getId())
             .addressName(doc.getAddressName())
@@ -134,37 +127,49 @@ public class PlaceService {
             .likeCnt(0L)
             .viewCnt(0L)
             .categoryType(CategoryType.of(doc.getCategoryGroupCode()))
-            .build())
-        .collectList()
-        .doOnNext(places -> log.info("장소 데이터 {}개 저장 시작", places.size()))
-        .flatMap(places -> {
-          try {
-            placeRepository.saveAll(places);
-            log.info("장소 데이터 저장 완료");
-            return Mono.just(places);
-          } catch (Exception e) {
-            log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
-            return Mono.error(e);
-          }
-        })
-        .block(java.time.Duration.ofMinutes(3));
-
-
+            .build()
+        )
+        .collect(Collectors.toList());
   }
+
   /**
-   * 비동기 처리
-   * 앱 실행시 자동으로 카카오 API 호출
-   * */
+   * 실제 DB 동기화: 삭제 여부만 갈라서, fetch→저장은 한 번에!
+   */
   @Transactional
-  @Async("applicationTaskExecutor")
-  public void doRefreshAsync() {
-    doRefresh();
+  public void refreshPlaces(boolean deleteFirst) {
+    if (deleteFirst) {
+      placeRepository.deleteAll();
+      log.info("기존 장소 전부 삭제");
+    }
+
+    List<KakaoDocument> docs = fetchPlaces()
+        .timeout(Duration.ofMinutes(2))
+        .block();  // 블로킹은 한 번만!
+
+    List<Place> places = buildPlaces(docs);
+    log.info("총 {}개 장소 저장 시작", places.size());
+    placeRepository.saveAll(places);
+    log.info("장소 데이터 저장 완료");
   }
 
-  @Transactional
-  public void deleteAllAndRefresh() {
-    placeRepository.deleteAll();
-    doRefresh();
+  /**
+   * 앱 구동 시, DB가 비어 있으면 한 번만 비동기 실행
+   */
+  @Async("applicationTaskExecutor")
+  public void refreshPlacesIfEmpty() {
+    if (placeRepository.count() == 0) {
+      refreshPlaces(false);
+    }
   }
+
+  /**
+   * 관리자 호출용: 무조건 삭제 후 다시 저장
+   */
+  public void deleteAllAndRefresh() {
+    refreshPlaces(true);
+  }
+
+
+
 
 }

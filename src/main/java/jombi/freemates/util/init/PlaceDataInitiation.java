@@ -22,9 +22,11 @@ public class PlaceDataInitiation{
   @EventListener(ApplicationReadyEvent.class)
   public void onAppReady() {
     log.debug("장소 개수 {}", placeRepository.count());
-    if (placeRepository.count() == 0) {
-      placeService.doRefreshAsync();
-    }
+    placeService.refreshPlacesIfEmpty();
   }
+
+
+
+
 }
 
