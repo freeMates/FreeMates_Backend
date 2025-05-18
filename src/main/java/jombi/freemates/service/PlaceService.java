@@ -1,6 +1,8 @@
 package jombi.freemates.service;
 
-import jakarta.transaction.Transactional;
+import static org.locationtech.jts.geom.util.GeometryMapper.flatMap;
+
+
 import java.util.List;
 import java.util.stream.Collectors;
 import jombi.freemates.model.postgres.Place;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
@@ -30,30 +33,39 @@ public class PlaceService {
 
   private final PlaceRepository placeRepository;
   private final WebClient kakaoWebClient ;
+  private static final List<CategoryType> CATEGORIES = List.of(
+         CategoryType.CAFE,
+         CategoryType.FOOD,
+         CategoryType.SHOPPING,
+         CategoryType.WALK,
+         CategoryType.PLAY,
+         CategoryType.HOSPITAL
+         );
 
 
   /**
    * 세종대학교 반경 10km 내 지정 카테고리 장소를 비동기로 전 페이지 조회
    */
   public Mono<List<KakaoDocument>> fetchPlaces() {
-    List<CategoryType> categories = List.of(
-        CategoryType.CAFE,
-        CategoryType.FOOD,
-        CategoryType.SHOPPING,
-        CategoryType.WALK,
-        CategoryType.PLAY,
-        CategoryType.HOSPITAL
-    );
 
-    return Flux.fromIterable(categories)
-        // 각 카테고리 타입별로
-        .flatMap(cat ->
-            // 그룹 코드들 하나씩
-            Flux.fromIterable(cat.getKakaoCodes())
-                // 각 코드마다 모든 페이징을 fetchAllPagesFor 으로 처리
-                .flatMap(this::fetchAllPagesFor)
-        )
-        .collectList();
+    return Flux.fromIterable(CATEGORIES)
+        // 카테고리 코드로 변환
+        .flatMap(categoryType -> {
+          String categoryCode = categoryType.getKakaoCodes().stream().findFirst().orElseThrow();
+          return fetchAllPagesFor(categoryCode);
+        })
+        // 카테고리 그룹 코드로 필터링
+        .filter(doc -> CATEGORIES.stream()
+            .anyMatch(cat -> cat.getKakaoCodes().contains(doc.getCategoryGroupCode())))
+        // 중복 제거
+        .distinct(KakaoDocument::getId)
+        // 리스트로 수집
+        .collectList()
+        // 에러 처리
+        .doOnError(WebClientResponseException.class,
+            e -> log.error("카카오 API 호출 실패: {}", e.getMessage()))
+        .doOnError(Throwable.class,
+            e -> log.error("카카오 API 호출 중 오류 발생: {}", e.getMessage()));
   }
 
   /**
@@ -98,10 +110,9 @@ public class PlaceService {
   /**
    *
    * 실제 카카오 API → DB 동기화
-   * 비동기처리
+   * 동기처리
    * */
   @Transactional
-  @Async("applicationTaskExecutor")
   public void doRefresh() {
     List<KakaoDocument> docs = fetchPlaces()
         .block(java.time.Duration.ofMinutes(2));
@@ -136,6 +147,15 @@ public class PlaceService {
            throw e;
          }
 
+  }
+  /**
+   * 비동기 처리
+   * 앱 실행시 자동으로 카카오 API 호출
+   * */
+  @Transactional
+  @Async("applicationTaskExecutor")
+  public void doRefreshAsync() {
+    doRefresh();
   }
 
   @Transactional
