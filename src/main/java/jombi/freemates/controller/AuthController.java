@@ -149,21 +149,26 @@ public class AuthController {
   @Operation(
       summary = "회원 탈퇴",
       description = """
-          ## 인증(JWT): **필요**
-          
-          ## 요청 쿼리 파라미터
-          - `hard` (boolean, optional): true로 설정하면 하드 딜리트 수행. 기본값은 false
+    ## 인증(JWT): **필요**
 
-          ## 동작
-          - `hard=false` 또는 미설정 시: 소프트 딜리트 (isDeleted=true)
-          - `hard=true`인 경우: 완전 삭제
+    ## 요청 쿼리 파라미터
+    - **`hard`** (boolean, optional): true로 설정하면 하드 딜리트 수행. 기본값은 false
+    - 사용 시 로그인 후 `Authorization` 헤더에 JWT 토큰을 포함해야 함
+      - 예시: `Authorization: Bearer {accessToken}`
 
-          ## 반환
-          - ResponseEntity<Void> (상태코드 200 OK)
+    ## 동작
+    - **`hard=false`** 또는 미설정 시: 소프트 딜리트 (isDeleted=true)  
+      - 회원 정보는 DB에 남아있지만, isDeleted 필드가 true로 설정됨  
+    - **`hard=true`**인 경우: 완전 삭제  
+      - 회원 정보가 DB에서 완전히 삭제됨  
+      - 이 경우, 복구할 수 없음
 
-          ## 에러 코드
-          - `MEMBER_NOT_FOUND`: 회원을 찾을 수 없음
-      """
+    ## 반환값 (ResponseEntity<Void>)
+    - **`ResponseEntity<Void>`** (상태코드 200 OK)
+
+    ## 에러코드
+    - **`MEMBER_NOT_FOUND`**: 회원을 찾을 수 없음
+    """
   )
   public ResponseEntity<Void> deleteAccount(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
