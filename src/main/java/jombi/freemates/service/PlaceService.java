@@ -76,7 +76,7 @@ public class PlaceService {
     return Mono.just(1)
         // expand 로 “다음 페이지 번호”를 스트림으로 확장
         .expand(currentPage -> {
-          if (currentPage < MAX_PAGE) {
+          if (currentPage < MAX_PAGE && !Thread.currentThread().isInterrupted()) {
             return Mono.just(currentPage + 1);
           }
           return Mono.empty();
@@ -114,10 +114,9 @@ public class PlaceService {
    * */
   @Transactional
   public void doRefresh() {
-    List<KakaoDocument> docs = fetchPlaces()
-        .block(java.time.Duration.ofMinutes(2));
-
-    List<Place> places = docs.stream()
+    fetchPlaces()
+        .timeout(java.time.Duration.ofMinutes(2))
+        .flatMapMany(docs -> Flux.fromIterable(docs))
         .map(doc -> Place.builder()
             .id(doc.getId())
             .addressName(doc.getAddressName())
@@ -136,16 +135,20 @@ public class PlaceService {
             .viewCnt(0L)
             .categoryType(CategoryType.of(doc.getCategoryGroupCode()))
             .build())
-        .collect(Collectors.toList());
+        .collectList()
+        .doOnNext(places -> log.info("장소 데이터 {}개 저장 시작", places.size()))
+        .flatMap(places -> {
+          try {
+            placeRepository.saveAll(places);
+            log.info("장소 데이터 저장 완료");
+            return Mono.just(places);
+          } catch (Exception e) {
+            log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
+            return Mono.error(e);
+          }
+        })
+        .block(java.time.Duration.ofMinutes(3));
 
-       try {
-           log.info("장소 데이터 {} 개 저장 시작", places.size());
-           placeRepository.saveAll(places);
-           log.info("장소 데이터 저장 완료");
-         } catch (Exception e) {
-           log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
-           throw e;
-         }
 
   }
   /**
