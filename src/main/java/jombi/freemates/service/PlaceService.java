@@ -148,8 +148,13 @@ public class PlaceService {
 
     List<Place> places = buildPlaces(docs);
     log.info("총 {}개 장소 저장 시작", places.size());
-    placeRepository.saveAll(places);
-    log.info("장소 데이터 저장 완료");
+    try {
+      placeRepository.saveAll(places);
+      log.info("장소 데이터 저장 완료");
+    } catch (Exception e) {
+      log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
+      throw e;
+    }
   }
 
   /**
