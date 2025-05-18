@@ -6,8 +6,6 @@ import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,8 +14,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import jombi.freemates.model.constant.CategoryType;
-import jombi.freemates.model.dto.KaKaoDocument;
-import jombi.freemates.model.dto.KaKaoResponse;
+import jombi.freemates.model.dto.KakaoDocument;
+import jombi.freemates.model.dto.KakaoResponse;
 
 @Slf4j
 @Service
@@ -36,7 +34,7 @@ public class PlaceService {
   /**
    * 세종대학교 반경 10km 내 지정 카테고리 장소를 비동기로 전 페이지 조회
    */
-  public Mono<List<KaKaoDocument>> fetchPlaces() {
+  public Mono<List<KakaoDocument>> fetchPlaces() {
     List<CategoryType> categories = List.of(
         CategoryType.CAFE,
         CategoryType.FOOD,
@@ -60,7 +58,7 @@ public class PlaceService {
   /**
    * 단일 카테고리 그룹 코드에 대해 page=1 부터 is_end 까지 순차 호출
    */
-  private Flux<KaKaoDocument> fetchAllPagesFor(String categoryCode) {
+  private Flux<KakaoDocument> fetchAllPagesFor(String categoryCode) {
     // 1페이지부터 시작
     return Mono.just(1)
         // expand 로 “다음 페이지 번호”를 스트림으로 확장
@@ -83,17 +81,17 @@ public class PlaceService {
                     .build()
                 )
                 .retrieve()
-                .bodyToMono(KaKaoResponse.class)
+                .bodyToMono(KakaoResponse.class)
                 // 실패 시 빈 response 로 대체
-                .onErrorResume(WebClientResponseException.class, e -> {
+                .onErrorResume(Throwable.class, e -> {
                   log.warn("카테고리 {} 페이지 {} 호출 실패: {}", categoryCode, page, e.getMessage());
-                  return Mono.just(new KaKaoResponse(null, List.of()));
+                  return Mono.just(new KakaoResponse(null, List.of()));
                 })
         )
         // is_end=true 이면 그 페이지까지 수집 후 스트림 종료
-        .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd==true)
+        .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd()==true)
         // KaKaoResponse.documents 를 펼쳐서 Flux<KaKaoDocument> 로 반환
-        .flatMapIterable(KaKaoResponse::getDocuments);
+        .flatMapIterable(KakaoResponse::getDocuments);
   }
 
   /**
@@ -104,7 +102,8 @@ public class PlaceService {
 
   @Async("applicationTaskExecutor")
   public void doRefresh() {
-    List<KaKaoDocument> docs = fetchPlaces().block();
+    List<KakaoDocument> docs = fetchPlaces()
+        .block(java.time.Duration.ofMinutes(2));
 
     List<Place> places = docs.stream()
         .map(doc -> Place.builder()
@@ -128,6 +127,11 @@ public class PlaceService {
         .collect(Collectors.toList());
 
     placeRepository.saveAll(places);
+  }
+
+  public void deleteAllAndRefresh() {
+    placeRepository.deleteAll();
+    doRefresh();
   }
 
 }

@@ -1,19 +1,11 @@
 package jombi.freemates.util.init;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import jombi.freemates.model.constant.CategoryType;
-import jombi.freemates.model.dto.KaKaoDocument;
-import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.PlaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j

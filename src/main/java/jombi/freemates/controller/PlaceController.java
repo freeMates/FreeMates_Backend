@@ -24,8 +24,7 @@ public class PlaceController {
   private final PlaceRepository placeRepository;
   @PostMapping("/refresh")
   public ResponseEntity<Void> refreshPlaces() {
-    placeRepository.deleteAll();
-    placeService.doRefresh();
+    placeService.deleteAllAndRefresh();
     return ResponseEntity.ok().build();
   }
 

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @Getter
@@ -15,7 +14,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KaKaoDocument {
+public class KakaoDocument {
 
   private String id;
 

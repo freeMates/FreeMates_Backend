@@ -13,13 +13,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class KaKaoResponse {
+public class KakaoResponse {
   private Meta meta;
-  private List<KaKaoDocument> documents;
+  private List<KakaoDocument> documents;
 
+  @Getter
   public static class Meta {
     private int totalCount;
     private int pageableCount;
-    public boolean isEnd;
+    private boolean isEnd;
   }
 }

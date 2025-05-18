@@ -10,11 +10,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+
 @Entity
 @Getter
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class Place extends BasePostgresEntity{
 
   // 카카오에서 받아 오는 정보
@@ -49,9 +51,9 @@ public class Place extends BasePostgresEntity{
 
   // 프리메이트에서 사용하는 정보
 
-  private Long likeCnt;
+  private Long likeCnt = 0L;
 
-  private Long viewCnt;
+  private Long viewCnt = 0L;
 
   @Enumerated(EnumType.STRING)
   private CategoryType categoryType;

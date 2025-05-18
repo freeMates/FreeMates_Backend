@@ -5,6 +5,10 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 카카오 API의 카테고리 그룹 코드를 기반으로 한 장소 카테고리 타입
+ * @see <a href="https://developers.kakao.com/docs/latest/ko/local/dev-guide#search-by-category-request-category-group-code">카카오 개발자 문서</a>
+ */
 @AllArgsConstructor
 @Getter
 public enum CategoryType {
@@ -27,7 +31,7 @@ public enum CategoryType {
     return Arrays.stream(values())
         .filter(cat -> cat.matches(kakaoCode))
         .findFirst()
-        .orElse(null);
+        .orElseThrow(() -> new IllegalArgumentException("Invalid kakaoCode: " + kakaoCode));
   }
 }
 
