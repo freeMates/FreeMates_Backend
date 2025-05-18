@@ -170,7 +170,6 @@ public class AuthController {
     - **`MEMBER_NOT_FOUND`**: 회원을 찾을 수 없음
     """
   )
-  @LogMonitor
   public ResponseEntity<Void> deleteAccount(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestParam(defaultValue = "false") boolean hard
