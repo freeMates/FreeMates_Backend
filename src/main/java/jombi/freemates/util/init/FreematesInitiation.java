@@ -1,6 +1,8 @@
 package jombi.freemates.util.init;
 
 import java.time.LocalDateTime;
+import jombi.freemates.repository.PlaceRepository;
+import jombi.freemates.service.PlaceService;
 import jombi.freemates.util.docs.GithubIssueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class FreematesInitiation implements ApplicationRunner {
 
   private final GithubIssueService githubIssueService;
+  private final PlaceService placeService;
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
@@ -23,6 +26,7 @@ public class FreematesInitiation implements ApplicationRunner {
     LocalDateTime startTime = LocalDateTime.now();
 
     githubIssueService.syncGithubIssues();
+    placeService.refreshPlacesIfEmpty();
 
     SuhLogger.logServerInitDuration(startTime);
     log.info("서버 데이터 초기화 및 업데이트 완료");

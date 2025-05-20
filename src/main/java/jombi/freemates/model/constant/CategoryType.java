@@ -1,5 +1,6 @@
 package jombi.freemates.model.constant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Arrays;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ public enum CategoryType {
   public boolean matches(String kakaoCode) {
     return kakaoCodes.contains(kakaoCode);
   }
-
+  @JsonCreator
   public static CategoryType of(String kakaoCode) {
     return Arrays.stream(values())
         .filter(cat -> cat.matches(kakaoCode))

@@ -4,10 +4,8 @@ package jombi.freemates.service;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
-import jombi.freemates.model.dto.KakaoCrawlDetail;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
-import jombi.freemates.service.crawler.KakaoCrawler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,10 +17,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import jombi.freemates.model.constant.CategoryType;
-import jombi.freemates.model.dto.KakaoDocument;
-import jombi.freemates.model.dto.KakaoResponse;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
+import jombi.freemates.model.dto.KakaoPlaceDocumentResponse;
+import jombi.freemates.model.dto.KakaoPlaceResponse;
 
 @Slf4j
 @Service
@@ -36,7 +32,6 @@ public class PlaceService {
 
   private final PlaceRepository placeRepository;
   private final WebClient kakaoWebClient ;
-  private final KakaoCrawler kakaoCrawler;
   private static final List<CategoryType> CATEGORIES = List.of(
          CategoryType.CAFE,
          CategoryType.FOOD,
@@ -50,7 +45,7 @@ public class PlaceService {
   /**
    * 세종대학교 반경 10km 내 지정 카테고리 장소를 비동기로 전 페이지 조회
    */
-  public Mono<List<KakaoDocument>> fetchPlaces() {
+  public Mono<List<KakaoPlaceDocumentResponse>> fetchPlaces() {
 
     return Flux.fromIterable(CATEGORIES)
         // 카테고리 코드로 변환
@@ -66,7 +61,7 @@ public class PlaceService {
                 .anyMatch(cat -> cat.getKakaoCodes()
                     .contains(doc.getCategoryGroupCode()))
         )        // 중복 제거
-        .distinct(KakaoDocument::getId)
+        .distinct(KakaoPlaceDocumentResponse::getId)
         // 리스트로 수집
         .collectList()
         // 에러 처리
@@ -79,7 +74,7 @@ public class PlaceService {
   /**
    * 단일 카테고리 그룹 코드에 대해 page=1 부터 is_end 까지 순차 호출
    */
-  private Flux<KakaoDocument> fetchAllPagesFor(String categoryCode) {
+  private Flux<KakaoPlaceDocumentResponse> fetchAllPagesFor(String categoryCode) {
     // 1페이지부터 시작
     return Mono.just(1)
         // expand 로 “다음 페이지 번호”를 스트림으로 확장
@@ -97,26 +92,26 @@ public class PlaceService {
                     .build()
                 )
                 .retrieve()
-                .bodyToMono(KakaoResponse.class)
+                .bodyToMono(KakaoPlaceResponse.class)
                 // 실패 시 빈 response 로 대체
                 .onErrorResume(Throwable.class, e -> {
                   log.warn("카테고리 {} 페이지 {} 호출 실패: {}", categoryCode, page, e.getMessage());
-                  return Mono.just(new KakaoResponse(null, List.of()));
+                  return Mono.just(new KakaoPlaceResponse(null, List.of()));
                 })
         )
         // is_end=true 이면 그 페이지까지 수집 후 스트림 종료
         .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd())
         // KaKaoResponse.documents 를 펼쳐서 Flux<KaKaoDocument> 로 반환
-        .flatMapIterable(KakaoResponse::getDocuments);
+        .flatMapIterable(KakaoPlaceResponse::getDocuments);
   }
 
   /**
    * KakaoDocument → Place 엔티티로 변환
    */
-  private List<Place> buildPlaces(List<KakaoDocument> docs) {
+  private List<Place> buildPlaces(List<KakaoPlaceDocumentResponse> docs) {
     return docs.stream()
         .map(doc -> Place.builder()
-            .id(doc.getId())
+            .kakaoPlaceId(doc.getId())
             .addressName(doc.getAddressName())
             .categoryGroupCode(doc.getCategoryGroupCode())
             .phone(doc.getPhone())
@@ -126,11 +121,11 @@ public class PlaceService {
             .x(doc.getX())
             .y(doc.getY())
             .distance(doc.getDistance())
-            .imgUrl(null)
+            .imageUrl(null)
             .description(null)
             .amenities(null)
-            .likeCnt(0L)
-            .viewCnt(0L)
+            .likeCount(0L)
+            .viewCount(0L)
             .categoryType(CategoryType.of(doc.getCategoryGroupCode()))
             .build()
         )
@@ -138,7 +133,7 @@ public class PlaceService {
   }
 
   /**
-   * 실제 DB 동기화 삭제 여부만 갈라서, fetch→저장은 한 번에!
+   * 실제 DB 동기화: 삭제 여부만 갈라서, fetch→저장은 한 번에!
    */
   @Transactional
   public void refreshPlaces(boolean deleteFirst) {
@@ -147,7 +142,7 @@ public class PlaceService {
       log.info("기존 장소 전부 삭제");
     }
 
-    List<KakaoDocument> docs = fetchPlaces()
+    List<KakaoPlaceDocumentResponse> docs = fetchPlaces()
         .timeout(Duration.ofMinutes(2))
         .block();  // 블로킹은 한 번만!
 
@@ -155,18 +150,11 @@ public class PlaceService {
     log.info("총 {}개 장소 저장 시작", places.size());
     try {
       placeRepository.saveAll(places);
-      log.info("장소 데이터 카카오 {}개 저장 완료", places.size());
+      log.info("장소 데이터 저장 완료");
     } catch (Exception e) {
       log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
       throw e;
     }
-    if (deleteFirst) {
-      addKakaoCrawlInfo();
-    }else{
-      addKakaoCrawlInfoAsync();
-
-    }
-
   }
 
   /**
@@ -184,64 +172,6 @@ public class PlaceService {
    */
   public void deleteAllAndRefresh() {
     refreshPlaces(true);
-  }
-
-  /**
-   * 카카오 크롤링 동기처리
-   */
-
-  @Transactional
-  public void addKakaoCrawlInfo(){
-    List<Place> places = placeRepository.findAll();
-    for (Place place : places) {
-      try {
-        // 카카오 크롤링
-
-        KakaoCrawlDetail kakaoCrawlDetail = kakaoCrawler.crawlByPlaceId(place.getId());
-        // Place 엔티티에 정보 업데이트
-        place.setImgUrl(kakaoCrawlDetail.getImgUrl());
-        place.setDescription(kakaoCrawlDetail.getDescription());
-        place.setAmenities(kakaoCrawlDetail.getAmenities());
-        placeRepository.save(place);
-        log.debug("이미지 저장된 거 {} 네이버에서 크롤링한거{}", place.getImgUrl(), kakaoCrawlDetail.getImgUrl());
-      } catch (Exception e) {
-        log.error("카카오 크롤링 중 오류 발생: {}", e.getMessage(), e);
-      }
-    }
-  }
-
-  /**
-   * 네이버 크롤링 비동기처리
-   */
-  public void addKakaoCrawlInfoAsync() {
-    List<Place> places = placeRepository.findAll();
-    int concurrency = 10;
-    Duration timeout = Duration.ofSeconds(5);
-    int maxRetries = 2;
-
-    Flux.fromIterable(places)
-        .flatMap(place ->
-                Mono.fromCallable(() -> kakaoCrawler.crawlByPlaceId(place.getId()))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .timeout(timeout)
-                    .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(1)))
-                    // KakaoCrawlDetail → Place 로 변환
-                    .map(detail -> {
-                      place.setImgUrl(detail.getImgUrl());
-                      place.setDescription(detail.getDescription());
-                      place.setAmenities(detail.getAmenities());
-                      return place;
-                    })
-                    .onErrorResume(e -> {
-                      log.warn("크롤링 실패 [{}]: {}", place.getPlaceName(), e.getMessage());
-                      // 실패한 경우에도 원래 place 를 반환
-                      return Mono.just(place);
-                    })
-            , concurrency
-        )
-        .collectList()
-        .doOnNext(updatedPlaces -> placeRepository.saveAll(updatedPlaces))
-        .block();
   }
 
 
