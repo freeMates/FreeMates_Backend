@@ -29,6 +29,10 @@ repositories {
 }
 
 dependencies {
+    // WebDriverManager
+    implementation "io.github.bonigarcia:webdrivermanager:5.5.3"
+
+
     // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -64,6 +68,9 @@ dependencies {
     implementation 'org.hibernate:hibernate-spatial:6.6.4.Final'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // WebFlux
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -96,6 +103,9 @@ dependencies {
     // jakarta.mail
     implementation 'com.sun.mail:jakarta.mail:2.0.1'
 
+    // json
+    implementation 'com.google.code.gson:gson:2.10.1'
+
     // Thymleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
@@ -103,11 +113,19 @@ dependencies {
     //validation
     implementation 'commons-validator:commons-validator:1.7'
 
+    // Selenium
+    implementation 'org.seleniumhq.selenium:selenium-java'
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver'
+
     // Suh-Random-Engine
     implementation 'me.suhsaechan:suh-random-engine:1.0.2'
 
     // Suh-Logger
     implementation 'me.suhsaechan:suh-logger:1.0.3'
+
+    implementation "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-x86_64"
+    implementation "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64"
+
 }
 
 tasks.named('test') {
