@@ -23,6 +23,7 @@ public class PlaceDataInitiation{
   public void onAppReady() {
     log.debug("장소 개수 {}", placeRepository.count());
     placeService.refreshPlacesIfEmpty();
+
   }
 
 
