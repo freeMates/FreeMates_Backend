@@ -4,8 +4,10 @@ package jombi.freemates.service;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
+import jombi.freemates.model.dto.KakaoCrawlDetail;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
+import jombi.freemates.service.crawler.KakaoCrawler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +21,8 @@ import reactor.core.publisher.Mono;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoDocument;
 import jombi.freemates.model.dto.KakaoResponse;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 @Slf4j
 @Service
@@ -32,6 +36,7 @@ public class PlaceService {
 
   private final PlaceRepository placeRepository;
   private final WebClient kakaoWebClient ;
+  private final KakaoCrawler kakaoCrawler;
   private static final List<CategoryType> CATEGORIES = List.of(
          CategoryType.CAFE,
          CategoryType.FOOD,
@@ -133,7 +138,7 @@ public class PlaceService {
   }
 
   /**
-   * 실제 DB 동기화: 삭제 여부만 갈라서, fetch→저장은 한 번에!
+   * 실제 DB 동기화 삭제 여부만 갈라서, fetch→저장은 한 번에!
    */
   @Transactional
   public void refreshPlaces(boolean deleteFirst) {
@@ -150,11 +155,18 @@ public class PlaceService {
     log.info("총 {}개 장소 저장 시작", places.size());
     try {
       placeRepository.saveAll(places);
-      log.info("장소 데이터 저장 완료");
+      log.info("장소 데이터 카카오 {}개 저장 완료", places.size());
     } catch (Exception e) {
       log.error("장소 데이터 저장 중 오류 발생: {}", e.getMessage(), e);
       throw e;
     }
+    if (deleteFirst) {
+      addKakaoCrawlInfo();
+    }else{
+      addKakaoCrawlInfoAsync();
+
+    }
+
   }
 
   /**
@@ -172,6 +184,64 @@ public class PlaceService {
    */
   public void deleteAllAndRefresh() {
     refreshPlaces(true);
+  }
+
+  /**
+   * 카카오 크롤링 동기처리
+   */
+
+  @Transactional
+  public void addKakaoCrawlInfo(){
+    List<Place> places = placeRepository.findAll();
+    for (Place place : places) {
+      try {
+        // 카카오 크롤링
+
+        KakaoCrawlDetail kakaoCrawlDetail = kakaoCrawler.crawlByPlaceId(place.getId());
+        // Place 엔티티에 정보 업데이트
+        place.setImgUrl(kakaoCrawlDetail.getImgUrl());
+        place.setDescription(kakaoCrawlDetail.getDescription());
+        place.setAmenities(kakaoCrawlDetail.getAmenities());
+        placeRepository.save(place);
+        log.debug("이미지 저장된 거 {} 네이버에서 크롤링한거{}", place.getImgUrl(), kakaoCrawlDetail.getImgUrl());
+      } catch (Exception e) {
+        log.error("카카오 크롤링 중 오류 발생: {}", e.getMessage(), e);
+      }
+    }
+  }
+
+  /**
+   * 네이버 크롤링 비동기처리
+   */
+  public void addKakaoCrawlInfoAsync() {
+    List<Place> places = placeRepository.findAll();
+    int concurrency = 10;
+    Duration timeout = Duration.ofSeconds(5);
+    int maxRetries = 2;
+
+    Flux.fromIterable(places)
+        .flatMap(place ->
+                Mono.fromCallable(() -> kakaoCrawler.crawlByPlaceId(place.getId()))
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .timeout(timeout)
+                    .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(1)))
+                    // KakaoCrawlDetail → Place 로 변환
+                    .map(detail -> {
+                      place.setImgUrl(detail.getImgUrl());
+                      place.setDescription(detail.getDescription());
+                      place.setAmenities(detail.getAmenities());
+                      return place;
+                    })
+                    .onErrorResume(e -> {
+                      log.warn("크롤링 실패 [{}]: {}", place.getPlaceName(), e.getMessage());
+                      // 실패한 경우에도 원래 place 를 반환
+                      return Mono.just(place);
+                    })
+            , concurrency
+        )
+        .collectList()
+        .doOnNext(updatedPlaces -> placeRepository.saveAll(updatedPlaces))
+        .block();
   }
 
 
