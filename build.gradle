@@ -64,6 +64,9 @@ dependencies {
     implementation 'org.hibernate:hibernate-spatial:6.6.4.Final'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // WebFlux
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -108,6 +111,10 @@ dependencies {
 
     // Suh-Logger
     implementation 'me.suhsaechan:suh-logger:1.0.3'
+
+    implementation "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-x86_64"
+    implementation "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64"
+
 }
 
 tasks.named('test') {
