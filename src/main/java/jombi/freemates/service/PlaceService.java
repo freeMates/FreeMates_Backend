@@ -17,8 +17,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import jombi.freemates.model.constant.CategoryType;
-import jombi.freemates.model.dto.KakaoDocument;
-import jombi.freemates.model.dto.KakaoResponse;
+import jombi.freemates.model.dto.KakaoPlaceDocumentResponse;
+import jombi.freemates.model.dto.KakaoPlaceResponse;
 
 @Slf4j
 @Service
@@ -45,7 +45,7 @@ public class PlaceService {
   /**
    * 세종대학교 반경 10km 내 지정 카테고리 장소를 비동기로 전 페이지 조회
    */
-  public Mono<List<KakaoDocument>> fetchPlaces() {
+  public Mono<List<KakaoPlaceDocumentResponse>> fetchPlaces() {
 
     return Flux.fromIterable(CATEGORIES)
         // 카테고리 코드로 변환
@@ -61,7 +61,7 @@ public class PlaceService {
                 .anyMatch(cat -> cat.getKakaoCodes()
                     .contains(doc.getCategoryGroupCode()))
         )        // 중복 제거
-        .distinct(KakaoDocument::getId)
+        .distinct(KakaoPlaceDocumentResponse::getId)
         // 리스트로 수집
         .collectList()
         // 에러 처리
@@ -74,7 +74,7 @@ public class PlaceService {
   /**
    * 단일 카테고리 그룹 코드에 대해 page=1 부터 is_end 까지 순차 호출
    */
-  private Flux<KakaoDocument> fetchAllPagesFor(String categoryCode) {
+  private Flux<KakaoPlaceDocumentResponse> fetchAllPagesFor(String categoryCode) {
     // 1페이지부터 시작
     return Mono.just(1)
         // expand 로 “다음 페이지 번호”를 스트림으로 확장
@@ -92,26 +92,26 @@ public class PlaceService {
                     .build()
                 )
                 .retrieve()
-                .bodyToMono(KakaoResponse.class)
+                .bodyToMono(KakaoPlaceResponse.class)
                 // 실패 시 빈 response 로 대체
                 .onErrorResume(Throwable.class, e -> {
                   log.warn("카테고리 {} 페이지 {} 호출 실패: {}", categoryCode, page, e.getMessage());
-                  return Mono.just(new KakaoResponse(null, List.of()));
+                  return Mono.just(new KakaoPlaceResponse(null, List.of()));
                 })
         )
         // is_end=true 이면 그 페이지까지 수집 후 스트림 종료
         .takeUntil(resp -> resp.getMeta() != null && resp.getMeta().isEnd())
         // KaKaoResponse.documents 를 펼쳐서 Flux<KaKaoDocument> 로 반환
-        .flatMapIterable(KakaoResponse::getDocuments);
+        .flatMapIterable(KakaoPlaceResponse::getDocuments);
   }
 
   /**
    * KakaoDocument → Place 엔티티로 변환
    */
-  private List<Place> buildPlaces(List<KakaoDocument> docs) {
+  private List<Place> buildPlaces(List<KakaoPlaceDocumentResponse> docs) {
     return docs.stream()
         .map(doc -> Place.builder()
-            .id(doc.getId())
+            .kakaoPlaceId(doc.getId())
             .addressName(doc.getAddressName())
             .categoryGroupCode(doc.getCategoryGroupCode())
             .phone(doc.getPhone())
@@ -121,11 +121,11 @@ public class PlaceService {
             .x(doc.getX())
             .y(doc.getY())
             .distance(doc.getDistance())
-            .imgUrl(null)
+            .imageUrl(null)
             .description(null)
             .amenities(null)
-            .likeCnt(0L)
-            .viewCnt(0L)
+            .likeCount(0L)
+            .viewCount(0L)
             .categoryType(CategoryType.of(doc.getCategoryGroupCode()))
             .build()
         )
@@ -142,7 +142,7 @@ public class PlaceService {
       log.info("기존 장소 전부 삭제");
     }
 
-    List<KakaoDocument> docs = fetchPlaces()
+    List<KakaoPlaceDocumentResponse> docs = fetchPlaces()
         .timeout(Duration.ofMinutes(2))
         .block();  // 블로킹은 한 번만!
 

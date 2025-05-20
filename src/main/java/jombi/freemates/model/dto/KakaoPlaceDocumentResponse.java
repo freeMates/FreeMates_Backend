@@ -14,7 +14,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KakaoDocument {
+public class KakaoPlaceDocumentResponse {
 
   private String id;
 

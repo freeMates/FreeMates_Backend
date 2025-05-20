@@ -13,9 +13,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class KakaoResponse {
+public class KakaoPlaceResponse {
   private Meta meta;
-  private List<KakaoDocument> documents;
+  private List<KakaoPlaceDocumentResponse> documents;
 
   @Getter
   public static class Meta {

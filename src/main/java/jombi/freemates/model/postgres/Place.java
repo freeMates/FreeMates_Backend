@@ -3,9 +3,13 @@ package jombi.freemates.model.postgres;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -21,7 +25,10 @@ public class Place extends BasePostgresEntity{
 
   // 카카오에서 받아 오는 정보
   @Id
-  private String id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID placeId;
+
+  private String kakaoPlaceId;
 
   private String addressName;
 
@@ -43,17 +50,18 @@ public class Place extends BasePostgresEntity{
 
   // 네이버 크롤링한 정보
 
-  private String imgUrl;
+  private String imageUrl;
 
   private String description;
 
   private String amenities;
 
   // 프리메이트에서 사용하는 정보
+  @Builder.Default
+  private Long likeCount = 0L;
 
-  private Long likeCnt = 0L;
-
-  private Long viewCnt = 0L;
+  @Builder.Default
+  private Long viewCount = 0L;
 
   @Enumerated(EnumType.STRING)
   private CategoryType categoryType;
