@@ -1,0 +1,224 @@
+name: SPRING-PROJECT-FILE-UPLOAD
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  config-files-management:
+    name: Spring Boot 설정 파일 관리
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 필요 패키지 설치
+        run: |
+          sudo apt-get install -y smbclient jq
+          echo "SMB와 jq 설치 완료"
+
+      # 타임스탬프 폴더 생성
+      - name: 타임스탬프 폴더명 생성
+        run: |
+          # Asia/Seoul 로컬타임 사용
+          export TZ='Asia/Seoul'
+          # YYYY-MM-DD_HH-MM-SS 형식
+          TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
+          echo "생성된 타임스탬프: $TIMESTAMP"
+
+      # 짧은 커밋 해시 계산
+      - name: 짧은 커밋 해시 계산
+        run: |
+          echo "SHORT_COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+          echo "짧은 커밋 해시: $(echo ${{ github.sha }} | cut -c1-7)"
+
+      # GitHub Secret에서 설정 파일들 생성
+      - name: Spring Boot 설정 파일 생성
+        run: |
+          # 폴더 구조 생성
+          mkdir -p github_secrets/${TIMESTAMP}
+          mkdir -p github_secrets/latest
+          
+          # application-prod.yml 파일 생성
+          echo "${{ secrets.APPLICATION_PROD_YML }}" > github_secrets/${TIMESTAMP}/application-prod.yml
+          echo "${{ secrets.APPLICATION_PROD_YML }}" > github_secrets/latest/application-prod.yml
+          
+          if [ -s "github_secrets/${TIMESTAMP}/application-prod.yml" ]; then
+            echo "application-prod.yml 파일 생성 성공 (크기: $(stat -c%s github_secrets/${TIMESTAMP}/application-prod.yml) 바이트)"
+          else
+            echo "경고: application-prod.yml 파일이 비어 있거나 생성되지 않았습니다"
+          fi
+          
+          # application-suh.yml 파일 생성
+          echo "${{ secrets.APPLICATION_SUH_YML }}" > github_secrets/${TIMESTAMP}/application-suh.yml
+          echo "${{ secrets.APPLICATION_SUH_YML }}" > github_secrets/latest/application-suh.yml
+          
+          if [ -s "github_secrets/${TIMESTAMP}/application-suh.yml" ]; then
+            echo "application-suh.yml 파일 생성 성공 (크기: $(stat -c%s github_secrets/${TIMESTAMP}/application-suh.yml) 바이트)"
+          else
+            echo "경고: application-suh.yml 파일이 비어 있거나 생성되지 않았습니다"
+          fi
+
+      # GitHub Secrets JSON 파일 생성
+      - name: GitHub Secrets JSON 파일 생성
+        run: |
+          export TZ='Asia/Seoul'
+          BUILD_DATE=$(date '+%Y-%m-%d %H:%M')
+          
+          # 모든 Secret 값을 포함하는 JSON 파일 생성 (SMB 정보 포함)
+          cat > github_secrets/${TIMESTAMP}/github-secrets.json << EOF
+          {
+            "secrets": {
+              "APPLICATION_PROD_YML": "${{ secrets.APPLICATION_PROD_YML }}",
+              "APPLICATION_SUH_YML": "${{ secrets.APPLICATION_SUH_YML }}",
+              "DOCKER_HUB_TOKEN": "${{ secrets.DOCKER_HUB_TOKEN }}",
+              "DOCKER_USERNAME": "${{ secrets.DOCKER_USERNAME }}",
+              "SERVER_HOSTS": "${{ secrets.SERVER_HOSTS }}",
+              "SERVER_KEY": "${{ secrets.SERVER_KEY }}",
+              "SUH_DOCKERHUB_TOKEN": "${{ secrets.SUH_DOCKERHUB_TOKEN }}",
+              "SUH_DOCKERHUB_USERNAME": "${{ secrets.SUH_DOCKERHUB_USERNAME }}",
+              "SUH_SERVER_HOST": "${{ secrets.SUH_SERVER_HOST }}",
+              "SUH_SERVER_PASSWORD": "${{ secrets.SUH_SERVER_PASSWORD }}",
+              "SUH_SERVER_USER": "${{ secrets.SUH_SERVER_USER }}",
+              "SMB_SERVER": "${{ secrets.SMB_SERVER }}",
+              "SMB_USERNAME": "${{ secrets.SMB_USERNAME }}",
+              "SMB_PASSWORD": "${{ secrets.SMB_PASSWORD }}",
+              "SMB_PORT": "44445"
+            }
+          }
+          EOF
+          
+          # 최신 폴더에도 복사
+          cp github_secrets/${TIMESTAMP}/github-secrets.json github_secrets/latest/
+          
+          echo "GitHub Secrets JSON 파일 생성 완료"
+
+      # GitHub Push 정보 JSON 파일 생성
+      - name: GitHub Push 정보 JSON 파일 생성
+        run: |
+          export TZ='Asia/Seoul'
+          BUILD_DATE=$(date '+%Y-%m-%d %H:%M')
+          
+          # PR 주소 확인 (있는 경우)
+          PR_URL=""
+          PR_NUMBER=""
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            PR_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${{ github.event.number }}"
+            PR_NUMBER="${{ github.event.number }}"
+          fi
+          
+          # 커밋 메시지 및 작성자 정보
+          COMMIT_MSG=$(git log -1 --pretty=format:%s)
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:%an)
+          COMMIT_AUTHOR_EMAIL=$(git log -1 --pretty=format:%ae)
+          
+          # GitHub Push 정보 JSON 생성
+          cat > github_secrets/${TIMESTAMP}/github-push-info.json << EOF
+          {
+            "build_info": {
+              "timestamp": "${TIMESTAMP}",
+              "workflow": "${GITHUB_WORKFLOW}",
+              "run_id": "${GITHUB_RUN_ID}",
+              "run_number": "${GITHUB_RUN_NUMBER}",
+              "job": "${GITHUB_JOB}",
+              "event": "${GITHUB_EVENT_NAME}",
+              "repository": "${GITHUB_REPOSITORY}",
+              "owner": "${GITHUB_REPOSITORY_OWNER}",
+              "branch": "${GITHUB_REF_NAME}",
+              "commit_hash": "${GITHUB_SHA}",
+              "short_hash": "${SHORT_COMMIT_HASH}",
+              "commit_url": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}",
+              "commit_message": "${COMMIT_MSG}",
+              "commit_author": "${COMMIT_AUTHOR}",
+              "commit_author_email": "${COMMIT_AUTHOR_EMAIL}",
+              "actor": "${GITHUB_ACTOR}",
+              "build_date": "${BUILD_DATE}",
+              "runner_os": "${RUNNER_OS}",
+              "pull_request_url": "${PR_URL}",
+              "pull_request_number": "${PR_NUMBER}"
+            },
+            "files": [
+              {
+                "file_name": "application-prod.yml",
+                "file_size": "$(stat -c%s github_secrets/${TIMESTAMP}/application-prod.yml 2>/dev/null || echo "0")",
+                "last_updated": "${BUILD_DATE}"
+              },
+              {
+                "file_name": "application-suh.yml",
+                "file_size": "$(stat -c%s github_secrets/${TIMESTAMP}/application-suh.yml 2>/dev/null || echo "0")",
+                "last_updated": "${BUILD_DATE}"
+              },
+              {
+                "file_name": "github-secrets.json",
+                "file_size": "$(stat -c%s github_secrets/${TIMESTAMP}/github-secrets.json 2>/dev/null || echo "0")",
+                "last_updated": "${BUILD_DATE}"
+              }
+            ]
+          }
+          EOF
+          
+          # 최신 폴더에도 복사
+          cp github_secrets/${TIMESTAMP}/github-push-info.json github_secrets/latest/
+          
+          echo "GitHub Push 정보 JSON 파일 생성 완료"
+          
+          # 파일 목록 확인
+          echo "=== github_secrets/${TIMESTAMP}/ 디렉토리: ==="
+          ls -la github_secrets/${TIMESTAMP}/
+          echo "=== github_secrets/latest/ 디렉토리: ==="
+          ls -la github_secrets/latest/
+
+      # SMB를 통해 파일 업로드
+      - name: SMB를 통해 파일 업로드
+        env:
+          SMB_USERNAME: ${{ secrets.SMB_USERNAME }}
+          SMB_PASSWORD: ${{ secrets.SMB_PASSWORD }}
+        run: |
+          SMB_SERVER=${{ secrets.SMB_SERVER }}
+          SMB_PORT=44445  # 하드코딩된 포트 번호
+          SMB_SHARE="projects"
+          SMB_BASE_PATH="/freemates/github_secret/back"
+          
+          echo "SMB 서버에 연결 중..."
+          
+          # 타임스탬프 디렉토리 생성
+          smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -c "cd $SMB_BASE_PATH; mkdir ${TIMESTAMP}" || echo "타임스탬프 디렉토리 생성 실패 또는 이미 존재함"
+          
+          # 타임스탬프 폴더에 파일 업로드
+          cd github_secrets/${TIMESTAMP}
+          for file in *; do
+            if [ -f "$file" ]; then
+              echo "타임스탬프 폴더에 파일 업로드 중: $file (크기: $(stat -c%s "$file") 바이트)"
+              smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -d 2 -c "cd $SMB_BASE_PATH/${TIMESTAMP}; put \"$file\"" || echo "파일 업로드 실패: $file"
+              echo "$file 타임스탬프 폴더에 업로드 완료"
+            fi
+          done
+          
+          # 최신 폴더에 파일 업로드 (루트 디렉토리에)
+          cd ../latest
+          for file in *; do
+            if [ -f "$file" ]; then
+              echo "루트 폴더에 최신 파일 업로드 중: $file (크기: $(stat -c%s "$file") 바이트)"
+              smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -d 2 -c "cd $SMB_BASE_PATH; put \"$file\"" || echo "파일 업로드 실패: $file"
+              echo "$file 루트 폴더에 업로드 완료"
+            fi
+          done
+          
+          # 업로드 성공 확인
+          cd ../..
+          echo "{\"last_updated\": \"${TIMESTAMP}\", \"commit\": \"${SHORT_COMMIT_HASH}\", \"actor\": \"${GITHUB_ACTOR}\", \"status\": \"completed\"}" > timestamp_index.json
+          smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -c "cd $SMB_BASE_PATH; put timestamp_index.json" || echo "타임스탬프 인덱스 업로드 실패"
+          
+          # 최종 업로드 파일 목록 확인
+          echo "타임스탬프 폴더 파일 목록 확인:"
+          smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -c "cd $SMB_BASE_PATH/${TIMESTAMP}; ls" || echo "타임스탬프 폴더 목록 확인 실패"
+          
+          echo "루트 폴더 파일 목록 확인:"
+          smbclient "//$SMB_SERVER/$SMB_SHARE" -p "$SMB_PORT" -U "$SMB_USERNAME%$SMB_PASSWORD" -m SMB3 -c "cd $SMB_BASE_PATH; ls" || echo "루트 폴더 목록 확인 실패"
+          
+          echo "모든 파일 업로드 완료"
