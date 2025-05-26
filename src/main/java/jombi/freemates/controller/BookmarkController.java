@@ -81,7 +81,7 @@ public class BookmarkController {
       )
   })
   @Operation(
-      summary = "즐겨찾기 생성",
+      summary = "즐겨찾기 가져오기",
       description = """
         ## 인증(JWT): **필요**
         
