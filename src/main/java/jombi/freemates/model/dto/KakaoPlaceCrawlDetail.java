@@ -11,12 +11,12 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class KakaoCrawlDetail {
-  private String imgUrl;
-  // 상세설명
+public class KakaoPlaceCrawlDetail {
+  private String imageUrl;
+  // 한줄 소개
+  private String introText;
+  // 상세정보
   private String description;
-  // 편의시설
-  private String amenities;
 
 
 }

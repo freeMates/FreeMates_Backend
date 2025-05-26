@@ -5,16 +5,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
-import java.net.CookieManager;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import jombi.freemates.model.dto.KakaoCrawlDetail;
+import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
+import jombi.freemates.util.CommonUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Cookie;
-import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -26,9 +23,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class KakaoCrawler {
+  private final OkHttpClient client;
   private static final String UA =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
           + "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15";
@@ -75,10 +74,6 @@ public class KakaoCrawler {
    * 그대로 헤더에 실어서 보낸다.
    */
   private JsonObject fetchJsonWithCookies(String url, String cookieHeader) throws IOException {
-    // OkHttpClient 인스턴스는 CookieJar 대신, 불변 클라이언트로 사용
-    OkHttpClient client = new OkHttpClient.Builder()
-        .callTimeout(Duration.ofSeconds(10))
-        .build();
 
     Request req = new Request.Builder()
         .url(url)
@@ -102,14 +97,16 @@ public class KakaoCrawler {
       if (!res.isSuccessful()) {
         throw new IOException("API 호출 실패: " + res.code());
       }
-      return JsonParser.parseString(res.body().string()).getAsJsonObject();
+      String payload = CommonUtil.nvl(res.body().string(), "");
+      return JsonParser.parseString(payload).getAsJsonObject();
     }
   }
 
   /**
    * placeId 별로 Selenium → OkHttp 로 토큰 쿠키를 자동 획득 & JSON 파싱
    */
-  public KakaoCrawlDetail crawlByPlaceId(String placeId) throws IOException {
+  public KakaoPlaceCrawlDetail crawlByPlaceId(String placeId) throws IOException {
+    log.info("▶ crawlByPlaceId 시작: {}", placeId);
     // Selenium 으로 먼저 메인 페이지 열고, 쿠키 획득
     String cookieHeader = fetchCookies(placeId);
     log.debug("쿠키 획득 완료: {}", cookieHeader);
@@ -119,14 +116,14 @@ public class KakaoCrawler {
     JsonObject panel = fetchJsonWithCookies(panelUrl, cookieHeader);
 
     // 이미지·소개 정보 파싱
-    String description = "";
+    String introText = "";
     String imgUrl      = "";
 
     if (panel.has("my_store") && panel.get("my_store").isJsonObject()) {
       JsonObject myStore = panel.getAsJsonObject("my_store");
 
       if (myStore.has("mystore_intro")) {
-        description = myStore.get("mystore_intro").getAsString();
+        introText = myStore.get("mystore_intro").getAsString();
       }
 
       if (myStore.has("main_photo_url")) {
@@ -135,7 +132,7 @@ public class KakaoCrawler {
     }
 
     // tags 배열 파싱
-    String amenities = "";
+    String description = "";
 
     if (panel.has("place_add_info") && panel.get("place_add_info").isJsonObject()) {
       JsonObject addInfo = panel.getAsJsonObject("place_add_info");
@@ -143,12 +140,12 @@ public class KakaoCrawler {
       if (addInfo.has("tags") && addInfo.get("tags").isJsonArray()) {
         JsonArray tagsArray = addInfo.getAsJsonArray("tags");
 
-        amenities = StreamSupport.stream(tagsArray.spliterator(), false)
+        description = StreamSupport.stream(tagsArray.spliterator(), false)
             .map(JsonElement::getAsString)
             .collect(Collectors.joining(","));
       }
     }
 
-    return new KakaoCrawlDetail(imgUrl, description, amenities);
+    return new KakaoPlaceCrawlDetail(imgUrl, introText, description);
   }
 }

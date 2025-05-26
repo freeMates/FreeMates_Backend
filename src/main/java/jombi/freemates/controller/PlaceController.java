@@ -1,7 +1,6 @@
 package jombi.freemates.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.PlaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 //추후 권한 설정
 public class PlaceController {
   private final PlaceService placeService;
-  private final PlaceRepository placeRepository;
   @PostMapping("/refresh")
   public ResponseEntity<Void> refreshPlaces() {
     placeService.deleteAllAndRefresh();

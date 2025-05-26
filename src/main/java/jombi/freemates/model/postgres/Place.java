@@ -1,5 +1,6 @@
 package jombi.freemates.model.postgres;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.checkerframework.common.aliasing.qual.Unique;
 
 
 @Entity
@@ -30,6 +32,7 @@ public class Place extends BasePostgresEntity{
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID placeId;
 
+  @Column(unique = true)
   private String kakaoPlaceId;
 
   private String addressName;
@@ -53,10 +56,10 @@ public class Place extends BasePostgresEntity{
   // 네이버 크롤링한 정보
 
   private String imageUrl;
-
+  // 한줄 소개
+  private String introText;
+  // 상세설명
   private String description;
-
-  private String amenities;
 
   // 프리메이트에서 사용하는 정보
   @Builder.Default
