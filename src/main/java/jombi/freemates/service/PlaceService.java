@@ -83,14 +83,22 @@ public class PlaceService {
         KakaoPlaceCrawlDetail kakaoPlaceCrawlDetail = kakaoCrawler.crawlByPlaceId(place.getKakaoPlaceId());
         // Place 엔티티에 정보 업데이트
         place.setImageUrl(kakaoPlaceCrawlDetail.getImageUrl());
-        place.setDescription(kakaoPlaceCrawlDetail.getDescription());
+        place.setTags(kakaoPlaceCrawlDetail.getTags());
         place.setIntroText(kakaoPlaceCrawlDetail.getIntroText());
         placeRepository.save(place);
-        log.debug("이미지 저장된 거 {} 네이버에서 크롤링한거{}", place.getImageUrl(), kakaoPlaceCrawlDetail.getImageUrl());
+        log.debug("이미지 저장된 거 {} 카카오에서 크롤링한거{}", place.getImageUrl(), kakaoPlaceCrawlDetail.getImageUrl());
       } catch (Exception e) {
         log.error("카카오 크롤링 중 오류 발생: {}", e.getMessage(), e);
       }
     }
+  }
+
+  /**
+   * 장소 전체 조회
+   */
+  @Transactional(readOnly = true)
+  public List<Place> getAllPlaces() {
+    return placeRepository.findAll();
   }
 
 

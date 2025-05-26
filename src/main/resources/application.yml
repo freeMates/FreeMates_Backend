@@ -28,6 +28,10 @@ spring:
     suffix: .html
     mode: HTML
 
+file:
+  upload-dir: /tmp/uploads
+  # 실제로 파일을 쓸 디렉터리
+
 springdoc:
   default-consumes-media-type: application/json;charset=UTF-8
   default-produces-media-type: application/json;charset=UTF-8
