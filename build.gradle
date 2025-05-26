@@ -29,6 +29,10 @@ repositories {
 }
 
 dependencies {
+    // WebDriverManager
+    implementation "io.github.bonigarcia:webdrivermanager:5.5.3"
+
+
     // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -99,12 +103,20 @@ dependencies {
     // jakarta.mail
     implementation 'com.sun.mail:jakarta.mail:2.0.1'
 
+    // json
+    implementation 'com.google.code.gson:gson:2.10.1'
+
     // Thymleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
 
     //validation
     implementation 'commons-validator:commons-validator:1.7'
+
+    // Selenium
+    implementation 'org.seleniumhq.selenium:selenium-java'
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver'
+    implementation("org.seleniumhq.selenium:selenium-devtools-v136:4.33.0")
 
     // Suh-Random-Engine
     implementation 'me.suhsaechan:suh-random-engine:1.0.2'
