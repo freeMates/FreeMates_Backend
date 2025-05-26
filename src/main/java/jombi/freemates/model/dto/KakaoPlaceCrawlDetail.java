@@ -1,5 +1,7 @@
 package jombi.freemates.model.dto;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,8 +17,9 @@ public class KakaoPlaceCrawlDetail {
   private String imageUrl;
   // 한줄 소개
   private String introText;
-  // 상세정보
-  private String description;
+  // 태그들
+  @Builder.Default
+  private List<String> tags = new ArrayList<>();
 
 
 }
