@@ -93,6 +93,14 @@ public class PlaceService {
     }
   }
 
+  /**
+   * 장소 전체 조회
+   */
+  @Transactional(readOnly = true)
+  public List<Place> getAllPlaces() {
+    return placeRepository.findAll();
+  }
+
 
 
 
