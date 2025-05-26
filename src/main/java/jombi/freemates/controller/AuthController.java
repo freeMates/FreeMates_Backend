@@ -163,8 +163,9 @@ public class AuthController {
       - 회원 정보가 DB에서 완전히 삭제됨  
       - 이 경우, 복구할 수 없음
 
-    ## 반환값 (ResponseEntity<Void>)
-    - **`ResponseEntity<Void>`** (상태코드 200 OK)
+    ## 반환값
+    - 없음
+
 
     ## 에러코드
     - **`MEMBER_NOT_FOUND`**: 회원을 찾을 수 없음
