@@ -1,12 +1,18 @@
 package jombi.freemates.model.postgres;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
 import lombok.AllArgsConstructor;
@@ -59,7 +65,13 @@ public class Place extends BasePostgresEntity{
   // 한줄 소개
   private String introText;
   // 상세설명
-  private String description;
+  @ElementCollection(fetch = FetchType.LAZY)
+  @CollectionTable(
+      name = "place_tags",
+      joinColumns = @JoinColumn(name = "place_id")
+  )
+  @Column(name = "tag")
+  private List<String> tags = new ArrayList<>();
 
   // 프리메이트에서 사용하는 정보
   @Builder.Default

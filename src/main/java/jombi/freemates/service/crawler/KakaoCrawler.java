@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
@@ -105,14 +107,13 @@ public class KakaoCrawler {
   /**
    * placeId 별로 Selenium → OkHttp 로 토큰 쿠키를 자동 획득 & JSON 파싱
    */
-  public KakaoPlaceCrawlDetail crawlByPlaceId(String placeId) throws IOException {
-    log.info("▶ crawlByPlaceId 시작: {}", placeId);
+  public KakaoPlaceCrawlDetail crawlByPlaceId(String kakaoPlaceId) throws IOException {
     // Selenium 으로 먼저 메인 페이지 열고, 쿠키 획득
-    String cookieHeader = fetchCookies(placeId);
+    String cookieHeader = fetchCookies(kakaoPlaceId);
     log.debug("쿠키 획득 완료: {}", cookieHeader);
 
     // panel 데이터를 쿠키와 함께 가져오기
-    String panelUrl = "https://place-api.map.kakao.com/places/panel3/" + placeId;
+    String panelUrl = "https://place-api.map.kakao.com/places/panel3/" + kakaoPlaceId;
     JsonObject panel = fetchJsonWithCookies(panelUrl, cookieHeader);
 
     // 이미지·소개 정보 파싱
@@ -132,20 +133,31 @@ public class KakaoCrawler {
     }
 
     // tags 배열 파싱
-    String description = "";
-
+//    String description = "";
+//
+//    if (panel.has("place_add_info") && panel.get("place_add_info").isJsonObject()) {
+//      JsonObject addInfo = panel.getAsJsonObject("place_add_info");
+//
+//      if (addInfo.has("tags") && addInfo.get("tags").isJsonArray()) {
+//        JsonArray tagsArray = addInfo.getAsJsonArray("tags");
+//
+//        description = StreamSupport.stream(tagsArray.spliterator(), false)
+//            .map(JsonElement::getAsString)
+//            .collect(Collectors.joining(","));
+//      }
+//    }
+    List<String> tags = new ArrayList<>();
     if (panel.has("place_add_info") && panel.get("place_add_info").isJsonObject()) {
       JsonObject addInfo = panel.getAsJsonObject("place_add_info");
-
       if (addInfo.has("tags") && addInfo.get("tags").isJsonArray()) {
         JsonArray tagsArray = addInfo.getAsJsonArray("tags");
-
-        description = StreamSupport.stream(tagsArray.spliterator(), false)
-            .map(JsonElement::getAsString)
-            .collect(Collectors.joining(","));
+        for (JsonElement el : tagsArray) {
+          tags.add(el.getAsString());
+        }
       }
     }
 
-    return new KakaoPlaceCrawlDetail(imgUrl, introText, description);
+
+    return new KakaoPlaceCrawlDetail(imgUrl, introText, tags);
   }
 }

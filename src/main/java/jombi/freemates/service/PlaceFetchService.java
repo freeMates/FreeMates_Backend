@@ -116,7 +116,7 @@ public class PlaceFetchService {
             .y(doc.getY())
             .distance(doc.getDistance())
             .imageUrl(null)
-            .description(null)
+            .tags(null)
             .introText(null)
             .likeCount(0L)
             .viewCount(0L)
