@@ -1,6 +1,7 @@
 package jombi.freemates.service;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import jombi.freemates.model.constant.CategoryType;
@@ -116,7 +117,7 @@ public class PlaceFetchService {
             .y(doc.getY())
             .distance(doc.getDistance())
             .imageUrl(null)
-            .description(null)
+            .tags(new ArrayList<>())
             .introText(null)
             .likeCount(0L)
             .viewCount(0L)
