@@ -1,6 +1,8 @@
 package jombi.freemates.model.postgres;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,8 +35,10 @@ public class Bookmark extends BasePostgresEntity{
 
   private String description;
 
+  @Enumerated(EnumType.STRING)
   private PinColor pinColor;
 
+  @Enumerated(EnumType.STRING)
   private Visibility visibility;
 
 
