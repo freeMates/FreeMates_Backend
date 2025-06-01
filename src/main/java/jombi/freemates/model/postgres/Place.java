@@ -70,6 +70,7 @@ public class Place extends BasePostgresEntity{
       name = "place_tags",
       joinColumns = @JoinColumn(name = "place_id")
   )
+
   @Builder.Default
   @Column(name = "tag")
   private List<String> tags = new ArrayList<>();
