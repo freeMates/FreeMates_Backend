@@ -1,5 +1,6 @@
 package jombi.freemates.model.postgres;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,12 +49,7 @@ public class Course extends BasePostgresEntity {
   @Enumerated(EnumType.STRING)
   private Visibility visibility;
 
-  @ManyToMany
-  @JoinTable(
-      name = "course_place",
-      joinColumns = @JoinColumn(name = "course_id"),
-      inverseJoinColumns = @JoinColumn(name = "place_id")
-  )
-  private List<Place> places = new ArrayList<>();
+  @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+  private List<CoursePlace> coursePlaces = new ArrayList<>();
 
 }
