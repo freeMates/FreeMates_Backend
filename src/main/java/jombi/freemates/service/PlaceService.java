@@ -97,18 +97,13 @@ public class PlaceService {
   }
 
   /**
-   * 장소 전체 조회
-   */
-  @Transactional(readOnly = true)
-  public Page<Place> getPlaces(Pageable pageable) {
-    return placeRepository.findAll(pageable);
-  }
-
-  /**
    * 카테고리별 장소 조회
    */
   @Transactional(readOnly = true)
   public Page<Place> getPlacesByCategory(CategoryType category, Pageable pageable) {
+    if(category== null) {
+      return placeRepository.findAll(pageable);
+    }
     return placeRepository.findByCategoryType(category, pageable);
   }
 
