@@ -18,12 +18,12 @@ import lombok.ToString;
 @NoArgsConstructor
 public class BookmarkResponse {
 
+  private UUID bookmarkId;
   private String imageUrl;
   private String title;
   private String description;
   private PinColor pinColor;
   private Visibility visibility;
-  // --- 아래 필드 추가 ---
   private UUID memberId;
   private String nickname;
 
