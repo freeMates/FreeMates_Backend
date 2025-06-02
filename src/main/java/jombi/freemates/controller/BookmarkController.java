@@ -80,7 +80,7 @@ public class BookmarkController {
       @RequestParam String description,
       @RequestParam PinColor pinColor,
       @RequestParam Visibility visibility,
-      @RequestParam(value = "imageUrl", required = false)
+      @RequestParam(value = "image", required = false)
       @Parameter(description = "이미지 파일", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
       MultipartFile image,
       @AuthenticationPrincipal CustomUserDetails user
@@ -90,9 +90,8 @@ public class BookmarkController {
     req.setDescription(description);
     req.setPinColor(pinColor);
     req.setVisibility(visibility);
-    // 수동으로 DTO에 이미지 세팅해도 되고, 서비스에 image 넘겨도 됨
     BookmarkResponse response = bookmarkService.create(user, req, image);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @ApiChangeLogs({
@@ -147,7 +146,7 @@ public class BookmarkController {
         ## 요청 파라미터
         - **Path Variable**
           - `bookmarkId` (UUID): 장소를 추가할 즐겨찾기 ID
-        - **Request Body (application/json)**
+        **Request Parameter**
           - `placeId` (UUID): 추가할 장소 ID
 
         ## 반환값
