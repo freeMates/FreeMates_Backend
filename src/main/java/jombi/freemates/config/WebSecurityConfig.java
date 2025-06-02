@@ -1,5 +1,7 @@
 package jombi.freemates.config;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import jombi.freemates.service.CustomUserDetailsService;
 import jombi.freemates.util.filter.CustomAuthenticationEntryPoint;
 import jombi.freemates.util.JwtUtil;
@@ -29,12 +31,15 @@ public class WebSecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
     http
+        .cors(withDefaults())
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
         .authorizeHttpRequests(auth -> auth
             // 허용 URL
             .requestMatchers(SecurityUrls.AUTH_WHITELIST.toArray(new String[0])).permitAll()
+            // 업로드된 이미지 파일은 모두에게 허용
+            .requestMatchers(HttpMethod.GET,"/uploads/**").permitAll()
             // 관리자 URL
             .requestMatchers(SecurityUrls.ADMIN_PATHS.toArray(new String[0])).hasRole("ADMIN")
             // 회원 관련 예시 URL

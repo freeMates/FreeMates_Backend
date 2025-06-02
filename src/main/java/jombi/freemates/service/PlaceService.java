@@ -10,6 +10,8 @@ import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.crawler.KakaoCrawler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,6 +93,14 @@ public class PlaceService {
         log.error("카카오 크롤링 중 오류 발생: {}", e.getMessage(), e);
       }
     }
+  }
+
+  /**
+   * 장소 전체 조회
+   */
+  @Transactional(readOnly = true)
+  public Page<Place> getPlaces(Pageable pageable) {
+    return placeRepository.findAll(pageable);
   }
 
 

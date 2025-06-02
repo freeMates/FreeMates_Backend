@@ -43,7 +43,17 @@ public enum ErrorCode {
   // Email
   INVALID_EMAIL(HttpStatus.BAD_REQUEST, "유효하지 않은 이메일입니다"),
 
-  DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다.")
+  DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
+
+  // Bookmark
+  BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 즐겨찾기입니다."),
+  DUPLICATE_PLACE_IN_BOOKMARK(HttpStatus.CONFLICT, "이미 즐겨찾기에 추가된 장소입니다."),
+
+  // Place
+  PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장소입니다."),
+
+  // File
+  FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 파일입니다."),
   ;
 
   private final HttpStatus status;
