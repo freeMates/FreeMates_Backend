@@ -39,7 +39,7 @@ public class WebSecurityConfig {
             // 허용 URL
             .requestMatchers(SecurityUrls.AUTH_WHITELIST.toArray(new String[0])).permitAll()
             // 업로드된 이미지 파일은 모두에게 허용
-            .requestMatchers("/uploads/**").permitAll()
+            .requestMatchers(HttpMethod.GET,"/uploads/**").permitAll()
             // 관리자 URL
             .requestMatchers(SecurityUrls.ADMIN_PATHS.toArray(new String[0])).hasRole("ADMIN")
             // 회원 관련 예시 URL
