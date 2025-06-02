@@ -1,9 +1,12 @@
 package jombi.freemates.service;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.collect;
+
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import jombi.freemates.model.constant.Visibility;
 import jombi.freemates.model.dto.BookmarkRequest;
 import jombi.freemates.model.dto.BookmarkResponse;
 import jombi.freemates.model.dto.CustomUserDetails;
@@ -16,6 +19,8 @@ import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +33,10 @@ public class BookmarkService {
   private final FileStorageService storage;
   private final PlaceRepository placeRepository;
 
+  /**
+   * 즐겨찾기 생성
+   *
+   */
   @Transactional
   public BookmarkResponse create(
       CustomUserDetails customUserDetails,
@@ -70,8 +79,11 @@ public class BookmarkService {
         .build();
   }
 
+  /**
+   * 멤버 별 즐겨찾기 목록 조회
+   */
   @Transactional(Transactional.TxType.SUPPORTS)
-  public List<BookmarkResponse> listByMember(CustomUserDetails customUserDetails) {
+  public List<BookmarkResponse> getBookmarksByMember(CustomUserDetails customUserDetails) {
     Member member = customUserDetails.getMember();
     return bookmarkRepository.findAllByMember(member).stream()
         .map(b -> BookmarkResponse.builder()
@@ -84,6 +96,26 @@ public class BookmarkService {
             .visibility(b.getVisibility())
             .build())
         .collect(Collectors.toList());
+  }
+
+  /**
+   * 즐겨찾기 목록 조회 (페이징)
+   */
+  @Transactional(Transactional.TxType.SUPPORTS)
+  public Page<BookmarkResponse> getBookmarks(int page, int size, Visibility visibility) {
+    return bookmarkRepository
+        .findByVisibility(visibility, PageRequest.of(page, size))
+        .map(b -> BookmarkResponse.builder()
+            .bookmarkId(b.getBookmarkId())
+            .memberId(b.getMember().getMemberId())
+            .nickname(b.getMember().getNickname())
+            .imageUrl(b.getImageUrl())
+            .title(b.getTitle())
+            .description(b.getDescription())
+            .pinColor(b.getPinColor())
+            .visibility(b.getVisibility())
+            .build()
+        );
   }
 
   @Transactional
