@@ -1,7 +1,5 @@
 package jombi.freemates.service;
 
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.collect;
-
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;

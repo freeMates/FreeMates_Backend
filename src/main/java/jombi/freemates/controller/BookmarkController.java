@@ -165,7 +165,7 @@ public class BookmarkController {
   public ResponseEntity<Page<BookmarkResponse>> getBookmarks(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
-      @RequestParam(required = false) Visibility visibility
+      @RequestParam(defaultValue = "PUBLIC") Visibility visibility
   ) {
     log.debug("page:{}, size:{}, visibility:{}", page, size, visibility);
     Page<BookmarkResponse> bookmarks = bookmarkService.getBookmarks(page, size, visibility);
