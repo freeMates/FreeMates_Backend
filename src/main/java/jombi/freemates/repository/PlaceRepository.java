@@ -17,5 +17,7 @@ public interface PlaceRepository extends JpaRepository<Place, UUID> {
   // 카테고리 타입으로 장소를 페이지네이션하여 조회
   Page<Place> findByCategoryType(CategoryType categoryType, Pageable pageable);
 
+  Place findByXAndY(String x, String y);
+
 
 }

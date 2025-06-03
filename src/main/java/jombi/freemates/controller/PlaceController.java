@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.CategoryType;
+import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.service.PlaceService;
 import jombi.freemates.util.docs.ApiChangeLog;
@@ -122,5 +123,44 @@ public class PlaceController {
 
     return ResponseEntity.ok(placeService.getPlacesByCategory(category, pageable));
   }
+
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-06-03",
+          author = Author.LEEDAYE,
+          issueNumber = 113,
+          description = "좌표 기반 장소 검색 API 추가"
+      )
+  })
+  @Operation(
+      summary = "좌표 기반 장소 검색",
+      description = """
+        ## 인증(JWT): **필요**
+        
+        ## 요청 파라미터 ()
+        - **`x`**: 경도 (longitude)
+        - **`y`**: 위도 (latitude)
+        ## 반환값 (`ResponseEntity<PlaceDto>`)
+        - **'placeName'**: 장소 이름
+        - **`roadAddressName`**: 도로명 주소
+        - **`imageUrl`**: 장소 이미지 URL
+        - **`introText`**: 장소 소개 텍스트
+        - **`tags`**: 장소 태그 목록
+        - **`categoryType`**: 장소 카테고리 타입
+        
+        
+        ## 에러코드
+        "Place not found" - 해당 좌표에 대한 장소가 존재하지 않을 때
+        """
+  )
+  @GetMapping("/geocode")
+  public ResponseEntity<PlaceDto> getPlaceByGeocode(
+      @RequestParam String x,
+      @RequestParam String y
+  ) {
+    return ResponseEntity.ok(placeService.getPlacesByGeocode(x, y));
+  }
+
+
 
 }
