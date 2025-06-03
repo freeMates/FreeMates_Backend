@@ -1,6 +1,7 @@
 package jombi.freemates.model.postgres;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,4 +87,12 @@ public class Place extends BasePostgresEntity{
 
   @Enumerated(EnumType.STRING)
   private CategoryType categoryType;
+
+  @OneToMany(mappedBy = "place",
+      fetch = FetchType.LAZY)
+  private List<BookmarkPlace> bookmarkPlaces = new ArrayList<>();
+
+  @OneToMany(mappedBy = "place",
+  fetch = FetchType.LAZY)
+  private List<CoursePlace> coursePlaces = new ArrayList<>();
 }
