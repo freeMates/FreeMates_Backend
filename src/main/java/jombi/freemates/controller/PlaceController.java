@@ -38,46 +38,6 @@ public class PlaceController {
     return ResponseEntity.ok().build();
   }
 
-//  @ApiChangeLogs({
-//      @ApiChangeLog(
-//          date = "2025-05-26",
-//          author = Author.LEEDAYE,
-//          issueNumber = 96,
-//          description = "장소가져오기"
-//      )
-//  })
-//  @Operation(
-//      summary = "장소가져오기",
-//      description = """
-//        ## 인증(JWT): **필요**
-//
-//        ## 요청 파라미터 (multipart/form-data)
-//        - **`page`**: 페이지(0부터 시작, 최대 32)
-//        - **`size`**: 크기
-//
-//        ## 반환값 (`ResponseEntity<Page<Place>>`)
-//        - **`content`**: 장소 목록
-//        - **`totalElements`**: 전체 요소 수
-//        - **`totalPages`**: 전체 페이지 수
-//        - **`number`**: 현재 페이지 번호
-//        - **`size`**: 페이지 크기
-//        - **`sort`**: 정렬 정보
-//        - **`numberOfElements`**: 현재 페이지의 요소 수
-//        - **`empty`**: 현재 페이지가 비어있는지 여부
-//
-//        ## 에러코드
-//        """
-//
-//  )
-//  @GetMapping("/list")
-//  public ResponseEntity<Page<Place>> getPlaces(
-//      @RequestParam(defaultValue = "0") int page,
-//      @RequestParam(defaultValue = "10") int size
-//  ) {
-//    // 페이지와 사이즈만으로 Pageable 생성
-//    Pageable pageable = PageRequest.of(page, size);
-//    return ResponseEntity.ok(placeService.getPlaces(pageable));
-//  }
 
   @ApiChangeLogs({
       @ApiChangeLog(

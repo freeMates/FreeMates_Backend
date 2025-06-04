@@ -46,6 +46,7 @@ public class Course extends BasePostgresEntity {
 
   private Integer freeTime; // 코스에 걸리는 시간 (분 단위)
 
+
   @Enumerated(EnumType.STRING)
   private Visibility visibility;
 
