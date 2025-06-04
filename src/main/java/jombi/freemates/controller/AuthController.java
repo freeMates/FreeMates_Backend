@@ -1,5 +1,7 @@
 package jombi.freemates.controller;
 
+import static java.time.LocalDate.now;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
@@ -14,10 +16,12 @@ import jombi.freemates.model.constant.JwtTokenType;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.LoginRequest;
 import jombi.freemates.model.dto.LoginResponse;
+import jombi.freemates.model.dto.MyPageDto;
 import jombi.freemates.model.dto.RegisterRequest;
 import jombi.freemates.model.dto.RegisterResponse;
 import jombi.freemates.model.dto.TokenRequest;
 import jombi.freemates.model.dto.TokenResponse;
+import jombi.freemates.model.postgres.Member;
 import jombi.freemates.service.AuthService;
 import jombi.freemates.util.JwtUtil;
 import jombi.freemates.util.docs.ApiChangeLog;
@@ -33,6 +37,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -372,6 +377,51 @@ public class AuthController {
         .accessToken(tokenResponse.getAccessToken())
         .build();
 
+  }
+
+  /**
+   * 마이페이지
+   *
+   * */
+  @LogMonitor
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-06-03", // 실제 날짜로 변경
+          author = Author.LEEDAYE,
+          issueNumber = 111,
+          description = "마이페이지 API 추가"
+      )
+  })
+  @Operation(
+      summary = "마이페이지 조회",
+      description = """
+        ## 인증(JWT): **필요**
+        
+        ## 반환값 (MyPageDto)
+        - **`username`**: 회원 ID
+        - **`nickname`**: 회원 닉네임
+        - **`email`**: 회원 이메일
+        - **`age`**: 회원 나이
+        - **`gender`**: 회원 성별
+        
+        ## 에러코드
+        - **`MEMBER_NOT_FOUND`**: 회원 정보를 찾을 수 없습니다.
+        """
+  )
+
+
+  @GetMapping("/mypage")
+  public MyPageDto getMyPage(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    Member member = customUserDetails.getMember();
+    if (member == null) {
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
+    return MyPageDto.builder()
+        .gender(member.getGender())
+        .username(member.getUsername())
+        .nickname(member.getNickname())
+        .age(now().getYear()-member.getBirthYear()+1)
+        .email(member.getEmail()).build();
   }
 
 
