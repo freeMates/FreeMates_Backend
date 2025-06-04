@@ -4,10 +4,9 @@ package jombi.freemates.service;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
-import jombi.freemates.model.dto.PlaceDto;
+import jombi.freemates.model.dto.GeoCodePlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.crawler.KakaoCrawler;
@@ -115,7 +114,7 @@ public class PlaceService {
    * 좌표에 따른 장소 조회
    */
   @Transactional(readOnly = true)
-  public PlaceDto getPlacesByGeocode(
+  public GeoCodePlaceDto getPlacesByGeocode(
       String x,
       String y
   ) {
@@ -128,7 +127,7 @@ public class PlaceService {
       throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
     }
     Place place = placeOpt.get();
-    PlaceDto placeDto = new PlaceDto(
+    GeoCodePlaceDto geoCodePlaceDto = new GeoCodePlaceDto(
         place.getPlaceName(),
         place.getRoadAddressName(),
         place.getImageUrl(),
@@ -136,7 +135,7 @@ public class PlaceService {
         place.getTags(),
         place.getCategoryType()
     );
-    return placeDto;
+    return geoCodePlaceDto;
   }
 
 
