@@ -30,7 +30,7 @@ public class SearchService {
     if (keyword == null || keyword.isBlank()) {
       log.info("검색어가 비어있음, 전체 장소 조회");
       Pageable pageable = PageRequest.of(page, size);
-      return placeService.getPlaces(pageable)
+      return placeService.getPlacesByCategory(null,pageable)
           .map(this::toDto);
     }
     // 검색 타입이 null이면 기본값으로 설정
