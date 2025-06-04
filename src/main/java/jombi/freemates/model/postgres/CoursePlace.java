@@ -25,6 +25,8 @@ public class CoursePlace {
   @EmbeddedId
   private CoursePlaceId coursePlaceId;
 
+  private Integer sequence;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("courseId")
   @JoinColumn(name = "course_id", nullable = false)
@@ -34,5 +36,6 @@ public class CoursePlace {
   @MapsId("placeId")
   @JoinColumn(name = "place_id", nullable = false)
   private Place place;
+
 
 }
