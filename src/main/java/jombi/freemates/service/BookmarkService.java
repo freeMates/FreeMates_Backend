@@ -8,8 +8,11 @@ import jombi.freemates.model.dto.BookmarkRequest;
 import jombi.freemates.model.dto.BookmarkResponse;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.postgres.Bookmark;
+import jombi.freemates.model.postgres.BookmarkPlace;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.model.postgres.Place;
+import jombi.freemates.model.postgres.id.BookmarkPlaceId;
+import jombi.freemates.repository.BookmarkPlaceRepository;
 import jombi.freemates.repository.BookmarkRepository;
 import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.util.exception.CustomException;
@@ -27,6 +30,7 @@ public class BookmarkService {
   private final BookmarkRepository bookmarkRepository;
   private final FileStorageService storage;
   private final PlaceRepository placeRepository;
+  private final BookmarkPlaceRepository bookmarkPlaceRepository;
 
   @Transactional
   public BookmarkResponse create(
@@ -60,6 +64,7 @@ public class BookmarkService {
 
     // 응답 DTO 반환
     return BookmarkResponse.builder()
+        .bookmarkId(b.getBookmarkId())
         .memberId(member.getMemberId())
         .nickname(member.getNickname())
         .imageUrl(imageUrl)
@@ -87,12 +92,14 @@ public class BookmarkService {
   }
 
   @Transactional
-  public void addPlaceToBookmark(CustomUserDetails customUserDetails,
+  public void addPlaceToBookmark(
+      CustomUserDetails customUserDetails,
       UUID bookmarkId,
-      UUID placeId) {
+      UUID placeId
+  ) {
     Member member = customUserDetails.getMember();
 
-    // 즐겨찾기 존재 여부 + 본인 소유 여부 확인
+    // 즐겨찾기(Bookmark) 존재 여부 + 소유자 검사
     Bookmark bookmark = bookmarkRepository
         .findByBookmarkIdAndMember(bookmarkId, member)
         .orElseThrow(() -> new CustomException(ErrorCode.BOOKMARK_NOT_FOUND));
@@ -102,16 +109,24 @@ public class BookmarkService {
         .findByPlaceId(placeId)
         .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
 
-    // 이미 추가된 상태인지는 선택사항: 중복 방지를 원하면 체크
-    if (bookmark.getPlaces().contains(place)) {
+    // 중복 검사: 이미 연결된 적이 있는지
+    BookmarkPlaceId compositeId = new BookmarkPlaceId(bookmarkId, placeId);
+    if (bookmarkPlaceRepository.existsById(compositeId)) {
       throw new CustomException(ErrorCode.DUPLICATE_PLACE_IN_BOOKMARK);
     }
 
-    // 리스트에 추가
-    bookmark.getPlaces().add(place);
+    // 새 BookmarkPlace 엔티티 만들어서 양방향 관계에 추가
+    BookmarkPlace bp = BookmarkPlace.builder()
+        .bookmarkPlaceId(compositeId)
+        .bookmark(bookmark)
+        .place(place)
+        .build();
 
-    // 저장 (cascade 옵션이 없으면, 명시적으로 save 해 줘야 함)
-    bookmarkRepository.save(bookmark);
+    // Bookmark 엔티티 쪽 컬렉션에도 추가 (양쪽 연관관계 유지)
+    bookmark.getBookmarkPlaces().add(bp);
+
+    //    명시적으로 BookmarkPlaceRepository를 호출해 주는 편이 더 확실할 수 있습니다.)
+    bookmarkPlaceRepository.save(bp);
 
     log.info("북마크({})에 장소({}) 추가 완료 - 사용자: {}",
         bookmarkId, placeId, member.getNickname());
