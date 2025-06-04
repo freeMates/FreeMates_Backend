@@ -3,6 +3,7 @@ package jombi.freemates.service;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
@@ -118,11 +119,15 @@ public class PlaceService {
       String x,
       String y
   ) {
-    Place place = placeRepository.findByXAndY(x, y);
-    if (place == null) {
+    if (x == null || x.trim().isEmpty() || y == null || y.trim().isEmpty()) {
+           throw new CustomException(ErrorCode.INVALID_REQUEST);
+         }
+    Optional<Place> placeOpt = placeRepository.findByXAndY(x, y);
+    if (placeOpt.isEmpty()) {
       log.warn("좌표 ({}, {})에 해당하는 장소가 없습니다.", x, y);
       throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
     }
+    Place place = placeOpt.get();
     PlaceDto placeDto = new PlaceDto(
         place.getPlaceName(),
         place.getRoadAddressName(),

@@ -17,7 +17,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlaceDto {
-  private String placeName;;
+  private String placeName;
   private String roadAddressName;
   private String imageUrl;
   private String introText;

@@ -138,8 +138,8 @@ public class PlaceController {
         ## 인증(JWT): **필요**
         
         ## 요청 파라미터 ()
-        - **`x`**: 경도 (longitude)
-        - **`y`**: 위도 (latitude)
+        - **`x`**: 경도 (longitude) - 필수, 문자열 형태의 좌표값
+        - **`y`**: 위도 (latitude) - 필수, 문자열 형태의 좌표값
         ## 반환값 (`ResponseEntity<PlaceDto>`)
         - **'placeName'**: 장소 이름
         - **`roadAddressName`**: 도로명 주소
