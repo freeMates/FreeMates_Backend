@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SearchService {
   private final PlaceRepository placeRepository;
+  private final PlaceService placeService;
   @Transactional(readOnly = true)
   public Page<PlaceDto> searchPlaces(
       SearchType searchType,
@@ -25,6 +26,14 @@ public class SearchService {
       int page,
       int size
   ) {
+    // 검색어가 비어있으면 전체 리스트
+    if (keyword == null || keyword.isBlank()) {
+      log.info("검색어가 비어있음, 전체 장소 조회");
+      Pageable pageable = PageRequest.of(page, size);
+      return placeService.getPlaces(pageable)
+          .map(this::toDto);
+    }
+    // 검색 타입이 null이면 기본값으로 설정
     if (searchType == null) {
       searchType = SearchType.defaultType();
     }

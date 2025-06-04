@@ -1,13 +1,15 @@
 package jombi.freemates.repository;
 
-import io.lettuce.core.dynamic.annotation.Param;
+
 import java.util.Optional;
 import java.util.UUID;
+import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.postgres.Place;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -38,5 +40,10 @@ public interface PlaceRepository extends JpaRepository<Place, UUID> {
       "   OR LOWER(p.introText) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
       "   OR LOWER(t) LIKE LOWER(CONCAT('%', :keyword, '%'))")
   Page<Place> searchAllFields(@Param("keyword") String keyword, Pageable pageable);
+
+  // 카테고리 타입으로 장소를 페이지네이션하여 조회
+  Page<Place> findByCategoryType(CategoryType categoryType, Pageable pageable);
+
+  Optional<Place> findByXAndY(String x, String y);
 
 }
