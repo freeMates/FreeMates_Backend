@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.constant.Visibility;
 import jombi.freemates.model.dto.CoursePlaceDto;
 import jombi.freemates.model.dto.CourseRequest;
@@ -23,6 +22,8 @@ import jombi.freemates.util.exception.CustomException;
 import jombi.freemates.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,11 +39,6 @@ public class CourseService {
 
   /**
    * 코스 생성
-   *
-   * @param customUser 현재 로그인한 사용자 정보
-   * @param req 코스 생성 요청 정보
-   * @param image 코스 대표 이미지 (선택 사항)
-   * @return 생성된 코스 정보 DTO
    */
   @Transactional
   public CourseDto createCourse(
@@ -62,7 +58,7 @@ public class CourseService {
       imageUrl = storage.storeImage(image);
     }
 
-    // Course 엔티티 생성·저장 (쓰기 모드 트랜잭션)
+    // Course 엔티티 생성·저장
     Course course = courseRepository.save(
         Course.builder()
             .member(member)
@@ -74,20 +70,14 @@ public class CourseService {
             .build()
     );
 
-    // placeIds 각각으로 Place 조회 → CoursePlace 엔티티 생성
+    // placeIds 각각으로 Place 조회 → CoursePlace 생성
     List<UUID> placeIds = req.getPlaceIds();
     List<CoursePlace> coursePlaceList = IntStream.range(0, placeIds.size())
         .mapToObj(idx -> {
           UUID placeId = placeIds.get(idx);
-
-          // Place 조회
           Place place = placeRepository.findByPlaceId(placeId)
               .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
-
-          // 복합키 생성
           CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
-
-          // CoursePlace 생성 (sequence = idx+1)
           return CoursePlace.builder()
               .coursePlaceId(compositeId)
               .course(course)
@@ -97,14 +87,58 @@ public class CourseService {
         })
         .collect(Collectors.toList());
 
-    // CoursePlace 엔티티 목록을 한 번에 저장
+    // CoursePlace 한꺼번에 저장
     coursePlaceRepository.saveAll(coursePlaceList);
 
-    // DTO 변환: 저장한 coursePlaceList를 바로 사용한다.
-    //    (course.getCoursePlaces()를 다시 쓰지 않아도 됨)
-    List<CoursePlaceDto> coursePlaceDtos = coursePlaceList.stream()
-        // 이미 순서대로 만들어 놓았기 때문에 별도 정렬 없어도 되지만,
-        // 안전하게 시퀀스 정렬을 걸어줄 수도 있습니다.
+    // 바로 DTO 변환
+    return buildCourseDto(course, req.getPlaceIds(), coursePlaceList, member.getNickname());
+  }
+
+  /**
+   * 내 코스 목록 가져오기
+   */
+  @Transactional(readOnly = true)
+  public List<CourseDto> getMyCourses(CustomUserDetails customUser) {
+    Member member = customUser.getMember();
+    if (member == null) {
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
+
+    List<Course> courses = courseRepository.findAllByMember(member);
+    return courses.stream()
+        .map(course -> buildCourseDto(course, extractPlaceIds(course.getCoursePlaces()), course.getCoursePlaces(), member.getNickname()))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * public인 코스 목록 가져오기
+   */
+  @Transactional(readOnly = true)
+  public Page<CourseDto> getCourses(Visibility visibility, Pageable pageable) {
+    Page<Course> coursePage = courseRepository.findAllByVisibility(visibility, pageable);
+
+    // Page<Course> → Page<CourseDto>로 변환
+    return coursePage.map(course -> {
+      // buildCourseDto(...)는 앞서 리팩토링한 공통 메서드
+      List<UUID> placeIds = extractPlaceIds(course.getCoursePlaces());
+      List<CoursePlace> coursePlaces = course.getCoursePlaces();
+      String nickName = course.getMember().getNickname();
+      return buildCourseDto(course, placeIds, coursePlaces, nickName);
+    });
+  }
+
+  /**
+   * Course → CourseDto 변환 공통 로직
+   *
+   */
+  private CourseDto buildCourseDto(
+      Course course,
+      List<UUID> placeIds,
+      List<CoursePlace> coursePlaces,
+      String nickName
+  ) {
+    // CoursePlaceDto 목록 생성
+    List<CoursePlaceDto> placeDtoList = coursePlaces.stream()
         .sorted(Comparator.comparing(CoursePlace::getSequence))
         .map(cp -> {
           Place p = cp.getPlace();
@@ -118,124 +152,26 @@ public class CourseService {
         })
         .collect(Collectors.toList());
 
-    // 최종 응답용 DTO 생성
     return CourseDto.builder()
         .courseId(course.getCourseId())
-        .nickName(member.getNickname())
+        .nickName(nickName)
         .title(course.getTitle())
         .description(course.getDescription())
         .freeTime(course.getFreeTime())
         .visibility(course.getVisibility())
         .imageUrl(course.getImageUrl())
-        .placeIds(req.getPlaceIds())
-        .coursePlaceDtos(coursePlaceDtos)
+        .placeIds(placeIds)
+        .coursePlaceDtos(placeDtoList)
         .build();
   }
 
-
   /**
-   *
-   * 내 코스 목록 가져오기
+   * 주어진 CoursePlace 목록에서 Place ID를 순서에 맞춰 추출하여 반환
    */
-
-    @Transactional(readOnly = true)
-    public List<CourseDto> getMyCourses(CustomUserDetails customUser) {
-      // 회원 정보 꺼내기, 없으면 예외
-      Member member = customUser.getMember();
-      if (member == null) {
-        throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
-      }
-
-      // 해당 회원이 만든 Course 리스트 가져오기
-      List<Course> courses = courseRepository.findAllByMember(member);
-
-      // Course → CourseDto로 매핑
-      return courses.stream()
-          .map(course -> {
-            // CoursePlace 리스트에서 CoursePlaceDto 생성
-            List<CoursePlaceDto> placeDtoList = course.getCoursePlaces().stream()
-                // 필요 시 sequence(순서) 필드로 정렬하고 싶으면, Comparator.comparing(CoursePlace::getSequence) 적용
-                .sorted(Comparator.comparing(CoursePlace::getSequence))
-                .map(coursePlace -> {
-                  Place place = coursePlace.getPlace();
-                  return CoursePlaceDto.builder()
-                      .placeName(place.getPlaceName())
-                      .distance(place.getDistance())
-                      .categoryType(place.getCategoryType())
-                      .imageUrl(place.getImageUrl())
-                      .tags(place.getTags())
-                      .build();
-                })
-                .collect(Collectors.toList());
-
-            // CoursePlace 리스트에서 Place ID만 따로 뽑아서 placeIds 생성
-            List<UUID> placeIds = course.getCoursePlaces().stream()
-                .sorted(Comparator.comparing(CoursePlace::getSequence))
-                .map(coursePlace -> coursePlace.getPlace().getPlaceId())
-                .collect(Collectors.toList());
-
-            // 최종적으로 CourseDto 생성
-            return CourseDto.builder()
-                .courseId(course.getCourseId())
-                .nickName(course.getMember().getNickname())
-                .title(course.getTitle())
-                .description(course.getDescription())
-                .freeTime(course.getFreeTime())
-                .visibility(course.getVisibility())
-                .imageUrl(course.getImageUrl())
-                .placeIds(placeIds)
-                .coursePlaceDtos(placeDtoList)
-                .build();
-          })
-          .collect(Collectors.toList());
-    }
-
-  /**
-   * public인 코스 목록 가져오기
-   */
-  @Transactional(readOnly = true)
-  public List<CourseDto> getCourses(Visibility visibility) {
-    // 공개된 코스만 가져오기
-    List<Course> courses = courseRepository.findAllByVisibility(visibility);
-
-    // Course → CourseDto로 매핑
-    return courses.stream()
-        .map(course -> {
-          // CoursePlace 리스트에서 CoursePlaceDto 생성
-          List<CoursePlaceDto> placeDtoList = course.getCoursePlaces().stream()
-              .sorted(Comparator.comparing(CoursePlace::getSequence))
-              .map(coursePlace -> {
-                Place place = coursePlace.getPlace();
-                return CoursePlaceDto.builder()
-                    .placeName(place.getPlaceName())
-                    .distance(place.getDistance())
-                    .categoryType(place.getCategoryType())
-                    .imageUrl(place.getImageUrl())
-                    .tags(place.getTags())
-                    .build();
-              })
-              .collect(Collectors.toList());
-
-          // CoursePlace 리스트에서 Place ID만 따로 뽑아서 placeIds 생성
-          List<UUID> placeIds = course.getCoursePlaces().stream()
-              .sorted(Comparator.comparing(CoursePlace::getSequence))
-              .map(coursePlace -> coursePlace.getPlace().getPlaceId())
-              .collect(Collectors.toList());
-
-          // 최종적으로 CourseDto 생성
-          return CourseDto.builder()
-              .courseId(course.getCourseId())
-              .nickName(course.getMember().getNickname())
-              .title(course.getTitle())
-              .description(course.getDescription())
-              .freeTime(course.getFreeTime())
-              .visibility(course.getVisibility())
-              .imageUrl(course.getImageUrl())
-              .placeIds(placeIds)
-              .coursePlaceDtos(placeDtoList)
-              .build();
-        })
+  private List<UUID> extractPlaceIds(List<CoursePlace> coursePlaces) {
+    return coursePlaces.stream()
+        .sorted(Comparator.comparing(CoursePlace::getSequence))
+        .map(cp -> cp.getPlace().getPlaceId())
         .collect(Collectors.toList());
   }
-
 }

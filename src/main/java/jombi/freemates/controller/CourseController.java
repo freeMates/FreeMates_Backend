@@ -15,6 +15,8 @@ import jombi.freemates.util.docs.ApiChangeLogs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -152,11 +154,15 @@ public class CourseController {
   @Operation(
       summary = "공개 코스 목록 가져오기",
       description = """
-      ## 인증(JWT): **필요 없음**
+      ## 인증(JWT): **필요**
 
-      ## 요청 파라미터 (없음)
+      ## 요청 파라미터
+      - `visibility`: 코스 공개 여부 (ENUM: `PUBLIC` 또는 `PRIVATE`, 기본값: `PUBLIC`)
+      - `page`: 페이지 번호 (0부터 시작, 기본값: 0)
+      - `size`: 페이지 크기 (기본값: 10)
+     
 
-      ## 반환값 (`List<CourseDto>`)
+      ## 반환값 (`Page<CourseDto>`)
       - `courseId`: 코스 ID (UUID)  
       - `nickName`: 코스를 만든 사용자 닉네임  
       - `title`, `description`, `freeTime`, `visibility`, `imageUrl`, `placeIds`: 코스 정보  
@@ -166,11 +172,14 @@ public class CourseController {
       """
   )
   @GetMapping("/list")
-  public ResponseEntity<List<CourseDto>> getCourses(
-      @RequestParam(defaultValue = "PUBLIC") Visibility visibility
+  public ResponseEntity<Page<CourseDto>> getCourses(
+      @RequestParam(defaultValue = "PUBLIC") Visibility visibility,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
   ) {
-    List<CourseDto> courses = courseService.getCourses(visibility);
-    return ResponseEntity.ok(courses);
+    Pageable pageable = PageRequest.of(page, size);
+    Page<CourseDto> pagedCourses = courseService.getCourses(visibility, pageable);
+    return ResponseEntity.ok(pagedCourses);
   }
 
 
