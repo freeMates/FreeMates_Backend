@@ -12,6 +12,7 @@ import jombi.freemates.model.constant.Visibility;
 import jombi.freemates.model.dto.BookmarkRequest;
 import jombi.freemates.model.dto.BookmarkResponse;
 import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.service.BookmarkService;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
@@ -168,6 +169,11 @@ public class BookmarkController {
     log.debug("placeId:{}", placeId);
     bookmarkService.addPlaceToBookmark(customUserDetails, bookmarkId, placeId);
     return ResponseEntity.ok().build();  // 혹은 204 No Content
+  }
+
+  @GetMapping("/{bookmarkId}/places")
+  public List<PlaceDto> getPlaces(@PathVariable UUID bookmarkId) {
+    return bookmarkService.getPlacesByBookmarkId(bookmarkId);
   }
 
 }
