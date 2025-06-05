@@ -160,7 +160,7 @@ public class BookmarkController {
         - `DUPLICATE_PLACE_IN_BOOKMARK (409)`: 이미 즐겨찾기에 추가된 장소입니다.
         """
   )
-  @PostMapping( "/{bookmarkId}/place")
+  @PostMapping( "/add/place/{bookmarkId}")
   public ResponseEntity<Void> addPlaceToBookmark(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable("bookmarkId") UUID bookmarkId,
@@ -170,8 +170,32 @@ public class BookmarkController {
     bookmarkService.addPlaceToBookmark(customUserDetails, bookmarkId, placeId);
     return ResponseEntity.ok().build();  // 혹은 204 No Content
   }
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-06-05",
+          author = Author.LEEDAYE,
+          issueNumber = 114,
+          description = "북마크에 따른 장소 목록 가져오기"
+      )
+  })
+  @Operation(
+      summary = "북마크에 따른 장소 목록 가져오기",
+      description = """
+        ## 인증(JWT): **필요**
+        
+        ## 요청 파라미터
+        - **Path Variable**
+          - `bookmarkId` (UUID): 북마크 ID
 
-  @GetMapping("/{bookmarkId}/places")
+        ## 반환값 (`List<PlaceDto>`)
+        - 즐겨찾기에 추가된 장소 목록
+
+        ## 에러코드
+        - `BOOKMARK_NOT_FOUND (404)`: 존재하지 않는 북마크입니다.
+        """
+  )
+
+  @GetMapping("/places/{bookmarkId}")
   public List<PlaceDto> getPlaces(@PathVariable UUID bookmarkId) {
     return bookmarkService.getPlacesByBookmarkId(bookmarkId);
   }

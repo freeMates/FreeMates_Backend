@@ -106,42 +106,13 @@ public class PlaceService {
    */
   @Transactional(readOnly = true)
   public Page<PlaceDto> getPlacesByCategory(CategoryType category, Pageable pageable) {
-    if (category == null) {
-      return placeRepository.findAll(pageable)
-          .map(p -> {
-            PlaceDto dto = new PlaceDto(
-                p.getPlaceId(),
-                p.getPlaceName(),
-                p.getIntroText(),
-                p.getAddressName(),
-                p.getImageUrl(),
-                p.getTags(),
-                p.getCategoryType(),
-                p.getLikeCount(),
-                p.getViewCount()
-            );
-            log.debug("카테고리 없이 장소 조회: {}", dto);
-            return dto;
-          });
-    }
+    // category가 null이면 전체 조회, 아니면 카테고리별 조회
+    Page<Place> placePage = (category == null)
+        ? placeRepository.findAll(pageable)
+        : placeRepository.findByCategoryType(category, pageable);
 
-    // category가 지정된 경우: findByCategoryType 호출 후 DTO로 변환
-    return placeRepository.findByCategoryType(category, pageable)
-        .map(p -> {
-          PlaceDto dto = new PlaceDto(
-              p.getPlaceId(),
-              p.getPlaceName(),
-              p.getIntroText(),
-              p.getAddressName(),
-              p.getImageUrl(),
-              p.getTags(),
-              p.getCategoryType(),
-              p.getLikeCount(),
-              p.getViewCount()
-          );
-          log.debug("카테고리 [{}] 로 장소 조회: {}", category, dto);
-          return dto;
-        });
+    // Place → PlaceDto 변환
+    return placePage.map(this::convertToDto);
   }
 
   /**
@@ -170,6 +141,23 @@ public class PlaceService {
         place.getCategoryType()
     );
     return geoCodePlaceDto;
+  }
+
+  /**
+   * Place → PlaceDto 변환 로직을 한곳에 모아 둔 메서드
+   */
+  private PlaceDto convertToDto(Place place) {
+    return new PlaceDto(
+        place.getPlaceId(),
+        place.getPlaceName(),
+        place.getIntroText(),
+        place.getAddressName(),
+        place.getImageUrl(),
+        place.getTags(),
+        place.getCategoryType(),
+        place.getLikeCount(),
+        place.getViewCount()
+    );
   }
 
 

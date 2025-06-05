@@ -130,8 +130,6 @@ public class BookmarkService {
           placeId, place.getLikeCount());
     }
 
-    log.info("장소 {}의 좋아요 수 증가 - 현재 좋아요 수: {}",
-        placeId, place.getLikeCount());
 
     // 새로운 BookmarkPlace 엔티티 생성 (현재 폴더에만 추가)
     BookmarkPlace bp = BookmarkPlace.builder()
@@ -145,8 +143,6 @@ public class BookmarkService {
 
     bookmarkPlaceRepository.save(bp);
 
-    log.info("북마크({})에 장소({}) 추가 완료 - 사용자: {}",
-        bookmarkId, placeId, member.getNickname());
   }
 
   @Transactional(readOnly = true)
