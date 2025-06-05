@@ -4,9 +4,11 @@ package jombi.freemates.service;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
 import jombi.freemates.model.dto.GeoCodePlaceDto;
+import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.crawler.KakaoCrawler;
@@ -103,11 +105,14 @@ public class PlaceService {
    * 카테고리별 장소 조회
    */
   @Transactional(readOnly = true)
-  public Page<Place> getPlacesByCategory(CategoryType category, Pageable pageable) {
-    if(category== null) {
-      return placeRepository.findAll(pageable);
-    }
-    return placeRepository.findByCategoryType(category, pageable);
+  public Page<PlaceDto> getPlacesByCategory(CategoryType category, Pageable pageable) {
+    // category가 null이면 전체 조회, 아니면 카테고리별 조회
+    Page<Place> placePage = (category == null)
+        ? placeRepository.findAll(pageable)
+        : placeRepository.findByCategoryType(category, pageable);
+
+    // Place → PlaceDto 변환
+    return placePage.map(this::convertToDto);
   }
 
   /**
@@ -136,6 +141,23 @@ public class PlaceService {
         place.getCategoryType()
     );
     return geoCodePlaceDto;
+  }
+
+  /**
+   * Place → PlaceDto 변환 로직을 한곳에 모아 둔 메서드
+   */
+  private PlaceDto convertToDto(Place place) {
+    return new PlaceDto(
+        place.getPlaceId(),
+        place.getPlaceName(),
+        place.getIntroText(),
+        place.getAddressName(),
+        place.getImageUrl(),
+        place.getTags(),
+        place.getCategoryType(),
+        place.getLikeCount(),
+        place.getViewCount()
+    );
   }
 
 

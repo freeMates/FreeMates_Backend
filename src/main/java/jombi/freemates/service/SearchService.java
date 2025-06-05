@@ -1,5 +1,6 @@
 package jombi.freemates.service;
 
+
 import jombi.freemates.model.constant.SearchType;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SearchService {
   private final PlaceRepository placeRepository;
   private final PlaceService placeService;
+
   @Transactional(readOnly = true)
   public Page<PlaceDto> searchPlaces(
       SearchType searchType,
@@ -26,20 +28,22 @@ public class SearchService {
       int page,
       int size
   ) {
-    // 검색어가 비어있으면 전체 리스트
+    // 검색어가 비어 있으면, 이미 DTO로 변환된 Page<PlaceDto>를 그대로 리턴
     if (keyword == null || keyword.isBlank()) {
       log.info("검색어가 비어있음, 전체 장소 조회");
       Pageable pageable = PageRequest.of(page, size);
-      return placeService.getPlacesByCategory(null,pageable)
-          .map(this::toDto);
+      return placeService.getPlacesByCategory(null, pageable);
     }
-    // 검색 타입이 null이면 기본값으로 설정
+
+    // 검색 타입이 null이면 기본값 설정
     if (searchType == null) {
       searchType = SearchType.defaultType();
     }
-    Pageable pageable = PageRequest.of(page, size, Sort.by("placeName").ascending());
 
+    // 검색 시 페이징 + 정렬 설정
+    Pageable pageable = PageRequest.of(page, size, Sort.by("placeName").ascending());
     Page<Place> placePage;
+
     switch (searchType) {
       case NAME:
         placePage = placeRepository.searchByName(keyword, pageable);
@@ -56,11 +60,11 @@ public class SearchService {
         break;
     }
 
+    // Place → PlaceDto로 변환
     return placePage.map(this::toDto);
   }
 
   private PlaceDto toDto(Place p) {
-    // PlaceResponse는 JSON 응답용 DTO
     return PlaceDto.builder()
         .placeId(p.getPlaceId())
         .placeName(p.getPlaceName())
@@ -73,7 +77,5 @@ public class SearchService {
         .viewCount(p.getViewCount())
         .build();
   }
-
-
-
 }
+
