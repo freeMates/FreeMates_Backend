@@ -3,11 +3,17 @@ package jombi.freemates.service;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
+import java.util.UUID;
+import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
+import jombi.freemates.model.dto.GeoCodePlaceDto;
+import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
 import jombi.freemates.service.crawler.KakaoCrawler;
+import jombi.freemates.util.exception.CustomException;
+import jombi.freemates.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -96,11 +102,64 @@ public class PlaceService {
   }
 
   /**
-   * 장소 전체 조회
+   * 카테고리별 장소 조회
    */
   @Transactional(readOnly = true)
-  public Page<Place> getPlaces(Pageable pageable) {
-    return placeRepository.findAll(pageable);
+  public Page<PlaceDto> getPlacesByCategory(CategoryType category, Pageable pageable) {
+    // category가 null이면 전체 조회, 아니면 카테고리별 조회
+    Page<Place> placePage = (category == null)
+        ? placeRepository.findAll(pageable)
+        : placeRepository.findByCategoryType(category, pageable);
+
+    // Place → PlaceDto 변환
+    return placePage.map(this::convertToPlaceDto);
+  }
+
+  /**
+   * 좌표에 따른 장소 조회
+   */
+  @Transactional(readOnly = true)
+  public GeoCodePlaceDto getPlacesByGeocode(
+      String x,
+      String y
+  ) {
+    if (x == null || x.trim().isEmpty() || y == null || y.trim().isEmpty()) {
+           throw new CustomException(ErrorCode.INVALID_REQUEST);
+         }
+    Optional<Place> placeOpt = placeRepository.findByXAndY(x, y);
+    if (placeOpt.isEmpty()) {
+      log.warn("좌표 ({}, {})에 해당하는 장소가 없습니다.", x, y);
+      throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
+    }
+    Place place = placeOpt.get();
+    GeoCodePlaceDto geoCodePlaceDto = new GeoCodePlaceDto(
+        place.getPlaceName(),
+        place.getRoadAddressName(),
+        place.getImageUrl(),
+        place.getIntroText(),
+        place.getTags(),
+        place.getCategoryType()
+    );
+    return geoCodePlaceDto;
+  }
+
+  /**
+   * Place → PlaceDto 변환 로직을 한곳에 모아 둔 메서드
+   */
+  public PlaceDto convertToPlaceDto(Place p) {
+    return PlaceDto.builder()
+        .placeId(p.getPlaceId())
+        .placeName(p.getPlaceName())
+        .introText(p.getIntroText())
+        .addressName(p.getAddressName())
+        .imageUrl(p.getImageUrl())
+        .tags(p.getTags())
+        .categoryType(p.getCategoryType())
+        .likeCount(p.getLikeCount())
+        .viewCount(p.getViewCount())
+        .distance(p.getDistance())
+        .build();
+  }
   }
 
 
@@ -111,4 +170,4 @@ public class PlaceService {
 
 
 
-}
+

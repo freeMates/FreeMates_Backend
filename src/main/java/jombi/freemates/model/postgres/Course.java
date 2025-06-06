@@ -17,7 +17,6 @@ import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import jombi.freemates.model.constant.PinColor;
 import jombi.freemates.model.constant.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,31 +28,29 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bookmark extends BasePostgresEntity{
+public class Course extends BasePostgresEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(updatable = false, nullable = false)
-  private UUID bookmarkId;
+  private UUID courseId;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  private Member member; // 즐겨찾기를 한 회원
+  private Member member; // 코스 만든 회원
 
-  private String imageUrl; // 즐겨찾기한 장소의 이미지 URL
+  private String imageUrl; // 코스를 만든 장소의 이미지 URL
 
   private String title;
 
   private String description;
 
-  @Enumerated(EnumType.STRING)
-  private PinColor pinColor;
+  private Integer freeTime; // 코스에 걸리는 시간 (분 단위)
+
 
   @Enumerated(EnumType.STRING)
   private Visibility visibility;
 
-  @OneToMany(mappedBy = "bookmark",
-  fetch = FetchType.LAZY)
-  private List<BookmarkPlace> bookmarkPlaces = new ArrayList<>();
-
+  @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+  private List<CoursePlace> coursePlaces = new ArrayList<>();
 
 }
