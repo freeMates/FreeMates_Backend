@@ -1,10 +1,11 @@
 package jombi.freemates.service;
 
 
+import static java.util.stream.Collectors.toList;
+
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
 import jombi.freemates.model.dto.PlaceDto;
@@ -118,19 +119,35 @@ public class PlaceService {
    * 좌표에 따른 장소 조회
    */
   @Transactional(readOnly = true)
-  public PlaceDto getPlacesByGeocode(
-      String x,
-      String y
-  ) {
-    if (x == null || x.trim().isEmpty() || y == null || y.trim().isEmpty()) {
-           throw new CustomException(ErrorCode.INVALID_REQUEST);
-         }
-    Optional<Place> placeOpt = placeRepository.findByXAndY(x, y);
-    if (placeOpt.isEmpty()) {
-      log.warn("좌표 ({}, {})에 해당하는 장소가 없습니다.", x, y);
-      throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
+  public List<PlaceDto> getPlacesByGeocode(String xStr, String yStr) {
+    double xInput;
+    double yInput;
+    try {
+      xInput = Double.parseDouble(xStr);
+      yInput = Double.parseDouble(yStr);
+    } catch (NumberFormatException e) {
+      throw new CustomException(ErrorCode.INVALID_REQUEST);
     }
-    return convertToPlaceDto(placeOpt.get());
+
+    // ±0.0001(= tolerance) 범위를 오차로 설정
+    double tolerance = 0.0001; // 0.0001은 약 11m 정도의 거리
+    double xMin = xInput - tolerance;
+    double xMax = xInput + tolerance;
+    double yMin = yInput - tolerance;
+    double yMax = yInput + tolerance;
+
+    // 네이티브 쿼리로 DB에서 범위 내의 장소만 한 번에 조회
+    List<Place> matched = placeRepository.findByCoordinateRange(xMin, xMax, yMin, yMax);
+    if (matched.isEmpty()) {
+      throw new CustomException(ErrorCode.PLACE_NOT_FOUND);
+      // 혹은 빈 리스트를 반환하고 싶다면 아래처럼:
+      // return Collections.emptyList();
+    }
+
+    // Place → PlaceDto로 변환
+    return matched.stream()
+        .map(this::convertToPlaceDto)
+        .collect(Collectors.toList());
   }
 
   /**
