@@ -16,8 +16,10 @@ import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.service.BookmarkService;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
+import lombok.Builder.Default;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -121,11 +123,54 @@ public class BookmarkController {
         """
   )
   @GetMapping("/mylist")
-  public List<BookmarkResponse> list(
+  public List<BookmarkResponse> getMyBookmarks(
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
-    return bookmarkService.listByMember(customUserDetails);
+    return bookmarkService.getMyBookmarks(customUserDetails);
   }
+
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-06-02",
+          author = Author.LEEDAYE,
+          issueNumber = 105,
+          description = "public/private 즐겨찾기 목록 가져오기"
+      )
+  })
+  @Operation(
+      summary = "즐겨찾기 목록 가져오기",
+      description = """
+        ## 인증(JWT): **필요**
+        
+        ## 요청 파라미터
+        - **`page`**: 페이지 번호 (0부터 시작, 기본값: 0)
+        - **`size`**: 페이지 크기 (기본값: 10)
+        - **`visibility`**: 공개 여부 (ENUM: `PUBLIC`, `PRIVATE`, 선택적)
+
+        ## 반환값 (`Page<BookmarkResponse>`)
+        - **`content`**: 즐겨찾기 목록
+        - **`totalElements`**: 전체 요소 수
+        - **`totalPages`**: 전체 페이지 수
+        - **`number`**: 현재 페이지 번호
+        - **`size`**: 페이지 크기
+        - **`sort`**: 정렬 정보
+        - **`numberOfElements`**: 현재 페이지의 요소 수
+        - **`empty`**: 현재 페이지가 비어있는지 여부
+
+        ## 에러코드
+        """
+  )
+  @GetMapping("/list")
+  public ResponseEntity<Page<BookmarkResponse>> getBookmarks(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "PUBLIC") Visibility visibility
+  ) {
+    log.debug("page:{}, size:{}, visibility:{}", page, size, visibility);
+    Page<BookmarkResponse> bookmarks = bookmarkService.getBookmarks(page, size, visibility);
+    return ResponseEntity.ok(bookmarks);
+  }
+
 
 
   /**
