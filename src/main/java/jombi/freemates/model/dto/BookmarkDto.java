@@ -1,5 +1,6 @@
 package jombi.freemates.model.dto;
 
+import java.util.List;
 import java.util.UUID;
 import jombi.freemates.model.constant.PinColor;
 import jombi.freemates.model.constant.Visibility;
@@ -16,7 +17,7 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookmarkResponse {
+public class BookmarkDto {
 
   private UUID bookmarkId;
   private String imageUrl;
@@ -26,5 +27,9 @@ public class BookmarkResponse {
   private Visibility visibility;
   private UUID memberId;
   private String nickname;
+  private Long likeCount; // 좋아요 수
+
+  private List<PlaceDto> placeDtos;
+
 
 }

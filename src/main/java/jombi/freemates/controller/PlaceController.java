@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.CategoryType;
-import jombi.freemates.model.dto.GeoCodePlaceDto;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.service.PlaceService;
@@ -113,7 +112,7 @@ public class PlaceController {
         """
   )
   @GetMapping("/geocode")
-  public ResponseEntity<GeoCodePlaceDto> getPlaceByGeocode(
+  public ResponseEntity<PlaceDto> getPlaceByGeocode(
       @RequestParam String x,
       @RequestParam String y
   ) {

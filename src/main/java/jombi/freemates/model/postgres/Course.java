@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.UUID;
 import jombi.freemates.model.constant.Visibility;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -28,6 +30,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
 public class Course extends BasePostgresEntity {
 
   @Id
@@ -46,11 +49,15 @@ public class Course extends BasePostgresEntity {
 
   private Integer freeTime; // 코스에 걸리는 시간 (분 단위)
 
+  @Builder.Default
+  private Long likeCount = 0L; // 좋아요 수
+
 
   @Enumerated(EnumType.STRING)
   private Visibility visibility;
 
   @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
+  @Builder.Default
   private List<CoursePlace> coursePlaces = new ArrayList<>();
 
 }

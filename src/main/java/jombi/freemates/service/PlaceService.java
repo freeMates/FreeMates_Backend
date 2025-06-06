@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
-import jombi.freemates.model.dto.GeoCodePlaceDto;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
 import jombi.freemates.repository.PlaceRepository;
@@ -119,7 +118,7 @@ public class PlaceService {
    * 좌표에 따른 장소 조회
    */
   @Transactional(readOnly = true)
-  public GeoCodePlaceDto getPlacesByGeocode(
+  public PlaceDto getPlacesByGeocode(
       String x,
       String y
   ) {
@@ -131,16 +130,7 @@ public class PlaceService {
       log.warn("좌표 ({}, {})에 해당하는 장소가 없습니다.", x, y);
       throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
     }
-    Place place = placeOpt.get();
-    GeoCodePlaceDto geoCodePlaceDto = new GeoCodePlaceDto(
-        place.getPlaceName(),
-        place.getRoadAddressName(),
-        place.getImageUrl(),
-        place.getIntroText(),
-        place.getTags(),
-        place.getCategoryType()
-    );
-    return geoCodePlaceDto;
+    return convertToPlaceDto(placeOpt.get());
   }
 
   /**
@@ -158,6 +148,8 @@ public class PlaceService {
         .likeCount(p.getLikeCount())
         .viewCount(p.getViewCount())
         .distance(p.getDistance())
+        .x(p.getX())
+        .y(p.getY())
         .build();
   }
   }

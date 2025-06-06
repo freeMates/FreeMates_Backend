@@ -20,8 +20,10 @@ import java.util.UUID;
 import jombi.freemates.model.constant.PinColor;
 import jombi.freemates.model.constant.Visibility;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -29,6 +31,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
 public class Bookmark extends BasePostgresEntity{
 
   @Id
@@ -45,6 +48,9 @@ public class Bookmark extends BasePostgresEntity{
 
   private String description;
 
+  @Builder.Default
+  private Long likeCount = 0L; // 좋아요 수
+
   @Enumerated(EnumType.STRING)
   private PinColor pinColor;
 
@@ -53,6 +59,7 @@ public class Bookmark extends BasePostgresEntity{
 
   @OneToMany(mappedBy = "bookmark",
   fetch = FetchType.LAZY)
+  @Builder.Default
   private List<BookmarkPlace> bookmarkPlaces = new ArrayList<>();
 
 

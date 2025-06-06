@@ -39,11 +39,10 @@ public class CourseDto {
   @Schema(description = "이미지 URL (업로드한 경우)")
   private String imageUrl;
 
-
-  @Schema(description = "해당 코스에 포함된 장소들의 ID 리스트")
-  private List<UUID> placeIds;
-
   @Schema(description = "해당 코스에 포함된 장소들의 상세 정보 리스트")
-  private List<CoursePlaceDto> coursePlaceDtos;
+  private List<PlaceDto> placeDtos;
+
+  @Schema(description = "코스 좋아요 수")
+  private Long likeCount;
 
 }
