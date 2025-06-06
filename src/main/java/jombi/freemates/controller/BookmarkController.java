@@ -238,7 +238,7 @@ public class BookmarkController {
 
         ## 에러코드
         - `UNAUTHORIZED (401)`: 인증되지 않은 사용자입니다.
-        - `PLACE_NOT_FOUND (404)`: 존재하지 않는 장소입니다.
+        - 'BOOKMARK_NOT_FOUND (404)': 존재하지 않는 북마크입니다.
         """
   )
   @PostMapping("/like/{bookmarkId}")
