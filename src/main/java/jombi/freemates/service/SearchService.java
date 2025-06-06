@@ -1,6 +1,7 @@
 package jombi.freemates.service;
 
 
+import java.util.stream.Collectors;
 import jombi.freemates.model.constant.SearchType;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Place;
@@ -61,21 +62,10 @@ public class SearchService {
     }
 
     // Place → PlaceDto로 변환
-    return placePage.map(this::toDto);
+    return placePage
+        .map(placeService::convertToPlaceDto);
   }
 
-  private PlaceDto toDto(Place p) {
-    return PlaceDto.builder()
-        .placeId(p.getPlaceId())
-        .placeName(p.getPlaceName())
-        .introText(p.getIntroText())
-        .addressName(p.getAddressName())
-        .imageUrl(p.getImageUrl())
-        .tags(p.getTags())
-        .categoryType(p.getCategoryType())
-        .likeCount(p.getLikeCount())
-        .viewCount(p.getViewCount())
-        .build();
-  }
+
 }
 

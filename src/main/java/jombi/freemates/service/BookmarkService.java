@@ -31,6 +31,7 @@ public class BookmarkService {
   private final FileStorageService storage;
   private final PlaceRepository placeRepository;
   private final BookmarkPlaceRepository bookmarkPlaceRepository;
+  private final PlaceService placeService;
 
   @Transactional
   public BookmarkResponse create(
@@ -153,20 +154,7 @@ public class BookmarkService {
 
     // 각 BookmarkPlace에서 Place를 꺼내어 PlaceDto로 변환
     return bookmarkPlaces.stream()
-        .map(bp -> {
-          Place p = bp.getPlace();
-          return new PlaceDto(
-              p.getPlaceId(),
-              p.getPlaceName(),
-              p.getIntroText(),
-              p.getAddressName(),
-              p.getImageUrl(),
-              p.getTags(),
-              p.getCategoryType(),
-              p.getLikeCount(),
-              p.getViewCount()
-          );
-        })
+        .map(bp -> placeService.convertToPlaceDto(bp.getPlace()))
         .collect(Collectors.toList());
   }
 

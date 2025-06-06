@@ -26,5 +26,8 @@ public class PlaceDto {
   private CategoryType categoryType;
   private Long likeCount;
   private Long viewCount;
+  private String distance;
 
-}
+
+
+  }
