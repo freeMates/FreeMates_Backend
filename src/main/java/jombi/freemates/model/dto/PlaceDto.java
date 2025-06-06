@@ -3,6 +3,7 @@ package jombi.freemates.model.dto;
 import java.util.List;
 import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
+import jombi.freemates.model.postgres.Place;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,5 +27,8 @@ public class PlaceDto {
   private CategoryType categoryType;
   private Long likeCount;
   private Long viewCount;
+  private String distance;
 
-}
+
+
+  }

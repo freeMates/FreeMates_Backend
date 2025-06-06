@@ -112,7 +112,7 @@ public class PlaceService {
         : placeRepository.findByCategoryType(category, pageable);
 
     // Place → PlaceDto 변환
-    return placePage.map(this::convertToDto);
+    return placePage.map(this::convertToPlaceDto);
   }
 
   /**
@@ -146,18 +146,20 @@ public class PlaceService {
   /**
    * Place → PlaceDto 변환 로직을 한곳에 모아 둔 메서드
    */
-  private PlaceDto convertToDto(Place place) {
-    return new PlaceDto(
-        place.getPlaceId(),
-        place.getPlaceName(),
-        place.getIntroText(),
-        place.getAddressName(),
-        place.getImageUrl(),
-        place.getTags(),
-        place.getCategoryType(),
-        place.getLikeCount(),
-        place.getViewCount()
-    );
+  public PlaceDto convertToPlaceDto(Place p) {
+    return PlaceDto.builder()
+        .placeId(p.getPlaceId())
+        .placeName(p.getPlaceName())
+        .introText(p.getIntroText())
+        .addressName(p.getAddressName())
+        .imageUrl(p.getImageUrl())
+        .tags(p.getTags())
+        .categoryType(p.getCategoryType())
+        .likeCount(p.getLikeCount())
+        .viewCount(p.getViewCount())
+        .distance(p.getDistance())
+        .build();
+  }
   }
 
 
@@ -168,4 +170,4 @@ public class PlaceService {
 
 
 
-}
+
