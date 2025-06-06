@@ -40,7 +40,7 @@ public class SearchController {
       description = """
         ## 인증(JWT): **필요**
         
-        ## 요청 파라미터 (multipart/form-data)
+        ## 요청 파라미터 (query parameters)
         - **`type`**: 검색 타입 (ENUM: `NAME`, `INTRO`, `TAG`, Default =`ALL`)
         - **`keyword`**: 검색 키워드(아무것도 검색하지 않을시 장소 전부)
         
