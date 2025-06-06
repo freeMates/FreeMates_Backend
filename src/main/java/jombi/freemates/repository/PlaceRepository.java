@@ -1,5 +1,6 @@
 package jombi.freemates.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jombi.freemates.model.constant.CategoryType;
@@ -44,5 +45,19 @@ public interface PlaceRepository extends JpaRepository<Place, UUID> {
   Page<Place> findByCategoryType(CategoryType categoryType, Pageable pageable);
 
   Optional<Place> findByXAndY(String x, String y);
+
+  @Query(
+      value = "SELECT * " +
+          "FROM place p " +
+          "WHERE CAST(p.x AS double precision) BETWEEN :xMin AND :xMax " +
+          "  AND CAST(p.y AS double precision) BETWEEN :yMin AND :yMax",
+      nativeQuery = true
+  )
+  List<Place> findByCoordinateRange(
+      @Param("xMin") double xMin,
+      @Param("xMax") double xMax,
+      @Param("yMin") double yMin,
+      @Param("yMax") double yMax
+  );
 
 }

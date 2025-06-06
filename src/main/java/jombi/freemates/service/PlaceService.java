@@ -3,12 +3,8 @@ package jombi.freemates.service;
 
 import static java.util.stream.Collectors.toList;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
@@ -133,45 +129,25 @@ public class PlaceService {
       throw new CustomException(ErrorCode.INVALID_REQUEST);
     }
 
-    // 소수점 셋째 자리에서 반올림한 기준값 구하기
-    BigDecimal bdX = BigDecimal.valueOf(xInput).setScale(3, RoundingMode.HALF_EVEN);
-    BigDecimal bdY = BigDecimal.valueOf(yInput).setScale(3, RoundingMode.HALF_EVEN);
+    // ±0.0001(= tolerance) 범위를 오차로 설정
+    double tolerance = 0.0001; // 0.0001은 약 11m 정도의 거리
+    double xMin = xInput - tolerance;
+    double xMax = xInput + tolerance;
+    double yMin = yInput - tolerance;
+    double yMax = yInput + tolerance;
 
-    // DB에서 일단 모든 Place를 조회해 온 뒤(규모가 크지 않다면 충분히 괜찮음),
-    // 또는 범위 쿼리를 쓰려면 PlaceRepository에 추가 커스텀 메서드를 만들어도 됨.
-    List<Place> allPlaces = placeRepository.findAll();
-
-    // 필터링: 각 Place 엔티티가 가지고 있는 x, y를 double로 파싱 → 동일하게 소수점 4자리 반올림 → 비교
-    List<Place> matched = allPlaces.stream()
-        .filter(p -> {
-          String px = p.getX();
-          String py = p.getY();
-          if (px == null || py == null || px.isBlank() || py.isBlank()) {
-            return false;
-          }
-          double xPlace, yPlace;
-          try {
-            xPlace = Double.parseDouble(px);
-            yPlace = Double.parseDouble(py);
-          } catch (NumberFormatException ex) {
-            return false;
-          }
-
-          BigDecimal bdXPlace = BigDecimal.valueOf(xPlace).setScale(3, RoundingMode.HALF_EVEN);
-          BigDecimal bdYPlace = BigDecimal.valueOf(yPlace).setScale(3, RoundingMode.HALF_EVEN);
-
-          return bdXPlace.equals(bdX) && bdYPlace.equals(bdY);
-        })
-        .toList();
-
+    // 네이티브 쿼리로 DB에서 범위 내의 장소만 한 번에 조회
+    List<Place> matched = placeRepository.findByCoordinateRange(xMin, xMax, yMin, yMax);
     if (matched.isEmpty()) {
       throw new CustomException(ErrorCode.PLACE_NOT_FOUND);
+      // 혹은 빈 리스트를 반환하고 싶다면 아래처럼:
+      // return Collections.emptyList();
     }
 
-    // 최종 PlaceDto 리스트로 매핑하여 반환
+    // Place → PlaceDto로 변환
     return matched.stream()
         .map(this::convertToPlaceDto)
-        .collect(toList());
+        .collect(Collectors.toList());
   }
 
   /**
