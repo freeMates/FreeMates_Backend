@@ -27,6 +27,8 @@ public class PlaceDto {
   private Long likeCount;
   private Long viewCount;
   private String distance;
+  private String x;
+  private String y;
 
 
 

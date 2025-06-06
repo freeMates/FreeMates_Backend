@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -181,6 +182,44 @@ public class CourseController {
     Page<CourseDto> pagedCourses = courseService.getCourses(visibility, pageable);
     return ResponseEntity.ok(pagedCourses);
   }
+
+  /**
+   * 코스 좋아요
+   */
+  @ApiChangeLogs({
+      @ApiChangeLog(
+          date = "2025-06-06",
+          author = Author.LEEDAYE,
+          issueNumber = 105,
+          description = "코스 좋아요 추가/취소"
+      )
+  })
+  @Operation(
+      summary = "코스 좋아요",
+      description = """
+      ## 인증(JWT): **필요**
+      
+      ## 요청 파라미터
+      - **Path Variable**
+        - `courseId` (UUID): 좋아요를 누를 코스 ID
+
+      ## 반환값
+      - **HTTP Status 200 OK** (혹은 204 No Content)
+
+      ## 에러코드
+      - `UNAUTHORIZED (401)`: 인증되지 않은 사용자입니다.
+      - `COURSE_NOT_FOUND (404)`: 존재하지 않는 코스입니다.
+      """
+  )
+  @PostMapping("/like/{courseId}")
+  public ResponseEntity<Void> likeCourse(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable("courseId") UUID courseId
+  ) {
+    courseService.likeCourse(customUserDetails, courseId);
+    return ResponseEntity.ok().build();
+  }
+
 
 
 

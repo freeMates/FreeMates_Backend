@@ -52,8 +52,12 @@ public enum ErrorCode {
   // Place
   PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장소입니다."),
 
+  COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 코스입니다."),
+
   // File
   FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 파일입니다."),
+
+
   ;
 
   private final HttpStatus status;

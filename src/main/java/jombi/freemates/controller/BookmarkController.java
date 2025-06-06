@@ -10,13 +10,12 @@ import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.PinColor;
 import jombi.freemates.model.constant.Visibility;
 import jombi.freemates.model.dto.BookmarkRequest;
-import jombi.freemates.model.dto.BookmarkResponse;
+import jombi.freemates.model.dto.BookmarkDto;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.service.BookmarkService;
 import jombi.freemates.util.docs.ApiChangeLog;
 import jombi.freemates.util.docs.ApiChangeLogs;
-import lombok.Builder.Default;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -78,7 +77,7 @@ public class BookmarkController {
   @PostMapping(value = "/create",
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public ResponseEntity<BookmarkResponse> create(
+  public ResponseEntity<BookmarkDto> create(
       @RequestParam String title,
       @RequestParam String description,
       @RequestParam PinColor pinColor,
@@ -88,13 +87,14 @@ public class BookmarkController {
       MultipartFile image,
       @AuthenticationPrincipal CustomUserDetails user
   ) {
-    BookmarkRequest req = new BookmarkRequest();
-    req.setTitle(title);
-    req.setDescription(description);
-    req.setPinColor(pinColor);
-    req.setVisibility(visibility);
-    BookmarkResponse response = bookmarkService.create(user, req, image);
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    BookmarkRequest req = BookmarkRequest.builder()
+        .title(title)
+        .description(description)
+        .pinColor(pinColor)
+        .visibility(visibility)
+        .build();
+    BookmarkDto dto = bookmarkService.create(user, req, image);
+    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
   @ApiChangeLogs({
@@ -123,7 +123,7 @@ public class BookmarkController {
         """
   )
   @GetMapping("/mylist")
-  public List<BookmarkResponse> getMyBookmarks(
+  public List<BookmarkDto> getMyBookmarks(
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
     return bookmarkService.getMyBookmarks(customUserDetails);
@@ -161,13 +161,13 @@ public class BookmarkController {
         """
   )
   @GetMapping("/list")
-  public ResponseEntity<Page<BookmarkResponse>> getBookmarks(
+  public ResponseEntity<Page<BookmarkDto>> getBookmarks(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(defaultValue = "PUBLIC") Visibility visibility
   ) {
     log.debug("page:{}, size:{}, visibility:{}", page, size, visibility);
-    Page<BookmarkResponse> bookmarks = bookmarkService.getBookmarks(page, size, visibility);
+    Page<BookmarkDto> bookmarks = bookmarkService.getBookmarks(page, size, visibility);
     return ResponseEntity.ok(bookmarks);
   }
 
@@ -215,34 +215,39 @@ public class BookmarkController {
     bookmarkService.addPlaceToBookmark(customUserDetails, bookmarkId, placeId);
     return ResponseEntity.ok().build();  // 혹은 204 No Content
   }
+
   @ApiChangeLogs({
       @ApiChangeLog(
-          date = "2025-06-05",
+          date = "2025-06-06",
           author = Author.LEEDAYE,
-          issueNumber = 114,
-          description = "북마크에 따른 장소 목록 가져오기"
+          issueNumber = 105,
+          description = "좋아요~"
       )
   })
   @Operation(
-      summary = "북마크에 따른 장소 목록 가져오기",
+      summary = "북마크 좋아요",
       description = """
         ## 인증(JWT): **필요**
         
         ## 요청 파라미터
         - **Path Variable**
-          - `bookmarkId` (UUID): 북마크 ID
+          - `bookmarkId` (UUID): 좋아요를 누를 즐겨찾기 ID
 
-        ## 반환값 (`List<PlaceDto>`)
-        - 즐겨찾기에 추가된 장소 목록
+        ## 반환값
+        - **HTTP Status 200 OK** (혹은 204 No Content)
 
         ## 에러코드
-        - `BOOKMARK_NOT_FOUND (404)`: 존재하지 않는 북마크입니다.
+        - `UNAUTHORIZED (401)`: 인증되지 않은 사용자입니다.
+        - 'BOOKMARK_NOT_FOUND (404)': 존재하지 않는 북마크입니다.
         """
   )
-
-  @GetMapping("/places/{bookmarkId}")
-  public List<PlaceDto> getPlaces(@PathVariable UUID bookmarkId) {
-    return bookmarkService.getPlacesByBookmarkId(bookmarkId);
+  @PostMapping("/like/{bookmarkId}")
+  public ResponseEntity<Void> likeBookmark(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable("bookmarkId") UUID bookmarkId
+  ) {
+    bookmarkService.likeBookmark(customUserDetails, bookmarkId);
+    return ResponseEntity.ok().build();  // 혹은 204 No Content
   }
 
 }

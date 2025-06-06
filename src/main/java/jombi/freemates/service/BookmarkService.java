@@ -5,14 +5,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jombi.freemates.model.constant.Visibility;
 import jombi.freemates.model.dto.BookmarkRequest;
-import jombi.freemates.model.dto.BookmarkResponse;
+import jombi.freemates.model.dto.BookmarkDto;
 import jombi.freemates.model.dto.CustomUserDetails;
 import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Bookmark;
+import jombi.freemates.model.postgres.BookmarkLike;
 import jombi.freemates.model.postgres.BookmarkPlace;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.model.postgres.Place;
+import jombi.freemates.model.postgres.id.BookmarkLikeId;
 import jombi.freemates.model.postgres.id.BookmarkPlaceId;
+import jombi.freemates.repository.BookmarkLikeRepository;
 import jombi.freemates.repository.BookmarkPlaceRepository;
 import jombi.freemates.repository.BookmarkRepository;
 import jombi.freemates.repository.PlaceRepository;
@@ -35,13 +38,14 @@ public class BookmarkService {
   private final PlaceRepository placeRepository;
   private final BookmarkPlaceRepository bookmarkPlaceRepository;
   private final PlaceService placeService;
+  private final BookmarkLikeRepository bookmarkLikeRepository;
 
   /**
    * 즐겨찾기 생성
    *
    */
   @Transactional
-  public BookmarkResponse create(
+  public BookmarkDto create(
       CustomUserDetails customUserDetails,
       BookmarkRequest req,
       MultipartFile image
@@ -71,17 +75,17 @@ public class BookmarkService {
     log.info("북마크 생성 완료 - ID: {}, 사용자: {}", b.getBookmarkId(), member.getNickname());
 
     // 응답 DTO 반환
-    return convertToBookmarkResponse(b);
+    return convertToBookmarkDto(b);
   }
 
   /**
    * 멤버 별 즐겨찾기 목록 조회
    */
   @Transactional(readOnly = true)
-  public List<BookmarkResponse> getMyBookmarks(CustomUserDetails customUserDetails) {
+  public List<BookmarkDto> getMyBookmarks(CustomUserDetails customUserDetails) {
     Member member = customUserDetails.getMember();
     return bookmarkRepository.findAllByMember(member).stream()
-        .map(this::convertToBookmarkResponse)
+        .map(this::convertToBookmarkDto)
         .collect(Collectors.toList());
   }
 
@@ -89,11 +93,47 @@ public class BookmarkService {
    * 즐겨찾기 목록 조회 (페이징)
    */
   @Transactional(readOnly = true)
-  public Page<BookmarkResponse> getBookmarks(int page, int size, Visibility visibility) {
+  public Page<BookmarkDto> getBookmarks(int page, int size, Visibility visibility) {
     return bookmarkRepository
         .findByVisibility(visibility, PageRequest.of(page, size))
-        .map(this::convertToBookmarkResponse);
+        .map(this::convertToBookmarkDto);
   }
+  /**
+   * 즐겨찾기 좋아요
+   */
+  @Transactional
+  public void likeBookmark(CustomUserDetails customUser, UUID bookmarkId) {
+    Member member = customUser.getMember();
+    if (member == null) {
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
+
+    Bookmark bookmark = bookmarkRepository.findById(bookmarkId)
+        .orElseThrow(() -> new CustomException(ErrorCode.BOOKMARK_NOT_FOUND));
+
+    BookmarkLikeId likeId = new BookmarkLikeId(member.getMemberId(), bookmark.getBookmarkId());
+    boolean exists = bookmarkLikeRepository.existsById(likeId);
+
+    if (exists) {
+      // 좋아요 이미 눌린 상태 → 취소
+      bookmarkLikeRepository.deleteById(likeId);
+      long current = bookmark.getLikeCount() == null ? 0L : bookmark.getLikeCount();
+      bookmark.setLikeCount(Math.max(0, current - 1));
+      bookmarkRepository.save(bookmark);
+    } else {
+      // 좋아요가 아직 없는 상태 → 추가
+      BookmarkLike like = BookmarkLike.builder()
+          .id(likeId)
+          .member(member)
+          .bookmark(bookmark)
+          .build();
+      bookmarkLikeRepository.save(like);
+      long current = bookmark.getLikeCount() == null ? 0L : bookmark.getLikeCount();
+      bookmark.setLikeCount(current + 1);
+      bookmarkRepository.save(bookmark);
+    }
+  }
+
 
   @Transactional
   public void addPlaceToBookmark(
@@ -149,20 +189,9 @@ public class BookmarkService {
 
   }
 
-  @Transactional(readOnly = true)
-  public List<PlaceDto> getPlacesByBookmarkId(UUID bookmarkId) {
-    // bookmarkId로 연결된 BookmarkPlace 목록 조회
-    List<BookmarkPlace> bookmarkPlaces =
-        bookmarkPlaceRepository.findByBookmarkBookmarkId(bookmarkId);
 
-    // 각 BookmarkPlace에서 Place를 꺼내어 PlaceDto로 변환
-    return bookmarkPlaces.stream()
-        .map(bp -> placeService.convertToPlaceDto(bp.getPlace()))
-        .collect(Collectors.toList());
-  }
-
-  public BookmarkResponse convertToBookmarkResponse(Bookmark bookmark) {
-    return BookmarkResponse.builder()
+  public BookmarkDto convertToBookmarkDto(Bookmark bookmark) {
+    return BookmarkDto.builder()
         .bookmarkId(bookmark.getBookmarkId())
         .memberId(bookmark.getMember().getMemberId())
         .nickname(bookmark.getMember().getNickname())
@@ -171,6 +200,10 @@ public class BookmarkService {
         .description(bookmark.getDescription())
         .pinColor(bookmark.getPinColor())
         .visibility(bookmark.getVisibility())
+        .likeCount(bookmark.getLikeCount())
+        .placeDtos(bookmark.getBookmarkPlaces().stream()
+            .map(bp -> placeService.convertToPlaceDto(bp.getPlace()))
+            .collect(Collectors.toList()))
         .build();
   }
 

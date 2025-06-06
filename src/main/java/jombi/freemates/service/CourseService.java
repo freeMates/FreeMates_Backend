@@ -1,20 +1,25 @@
 package jombi.freemates.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import jombi.freemates.model.constant.Visibility;
-import jombi.freemates.model.dto.CoursePlaceDto;
 import jombi.freemates.model.dto.CourseRequest;
 import jombi.freemates.model.dto.CourseDto;
 import jombi.freemates.model.dto.CustomUserDetails;
+import jombi.freemates.model.dto.PlaceDto;
 import jombi.freemates.model.postgres.Course;
+import jombi.freemates.model.postgres.CourseLike;
 import jombi.freemates.model.postgres.CoursePlace;
 import jombi.freemates.model.postgres.Member;
 import jombi.freemates.model.postgres.Place;
+import jombi.freemates.model.postgres.id.CourseLikeId;
 import jombi.freemates.model.postgres.id.CoursePlaceId;
+import jombi.freemates.repository.CourseLikeRepository;
 import jombi.freemates.repository.CoursePlaceRepository;
 import jombi.freemates.repository.CourseRepository;
 import jombi.freemates.repository.PlaceRepository;
@@ -36,6 +41,11 @@ public class CourseService {
   private final FileStorageService storage;
   private final PlaceRepository placeRepository;
   private final CoursePlaceRepository coursePlaceRepository;
+  private final PlaceService placeService;
+  private final CourseLikeRepository courseLikeRepository;
+
+  @PersistenceContext
+  private EntityManager entityManager;
 
   /**
    * 코스 생성
@@ -56,7 +66,8 @@ public class CourseService {
     String imageUrl = null;
     if (image != null && !image.isEmpty()) {
       imageUrl = storage.storeImage(image);
-    }
+    }// placeIds 각각으로 Place 조회 → CoursePlace 생성
+
 
     // Course 엔티티 생성·저장
     Course course = courseRepository.save(
@@ -67,10 +78,10 @@ public class CourseService {
             .freeTime(req.getFreeTime())
             .visibility(req.getVisibility())
             .imageUrl(imageUrl)
+            .likeCount(0L) // 초기 좋아요 수는 0
             .build()
     );
 
-    // placeIds 각각으로 Place 조회 → CoursePlace 생성
     List<UUID> placeIds = req.getPlaceIds();
     List<CoursePlace> coursePlaceList = IntStream.range(0, placeIds.size())
         .mapToObj(idx -> {
@@ -90,8 +101,13 @@ public class CourseService {
     // CoursePlace 한꺼번에 저장
     coursePlaceRepository.saveAll(coursePlaceList);
 
+    entityManager.flush();
+    entityManager.clear();
+
     // 바로 DTO 변환
-    return buildCourseDto(course, req.getPlaceIds(), coursePlaceList, member.getNickname());
+    return courseRepository.findById(course.getCourseId())
+        .map(this::converToCourseDto)
+        .orElseThrow(() -> new CustomException(ErrorCode.COURSE_NOT_FOUND));// 단일 코스 생성이므로 첫 번째 요소만 반환
   }
 
   /**
@@ -106,7 +122,7 @@ public class CourseService {
 
     List<Course> courses = courseRepository.findAllByMember(member);
     return courses.stream()
-        .map(course -> buildCourseDto(course, extractPlaceIds(course.getCoursePlaces()), course.getCoursePlaces(), member.getNickname()))
+        .map(this::converToCourseDto)
         .collect(Collectors.toList());
   }
 
@@ -118,60 +134,66 @@ public class CourseService {
     Page<Course> coursePage = courseRepository.findAllByVisibility(visibility, pageable);
 
     // Page<Course> → Page<CourseDto>로 변환
-    return coursePage.map(course -> {
-      // buildCourseDto(...)는 앞서 리팩토링한 공통 메서드
-      List<UUID> placeIds = extractPlaceIds(course.getCoursePlaces());
-      List<CoursePlace> coursePlaces = course.getCoursePlaces();
-      String nickName = course.getMember().getNickname();
-      return buildCourseDto(course, placeIds, coursePlaces, nickName);
-    });
+    return coursePage.map(this::converToCourseDto);
   }
 
-  /**
-   * Course → CourseDto 변환 공통 로직
-   *
-   */
-  private CourseDto buildCourseDto(
-      Course course,
-      List<UUID> placeIds,
-      List<CoursePlace> coursePlaces,
-      String nickName
-  ) {
-    // CoursePlaceDto 목록 생성
-    List<CoursePlaceDto> placeDtoList = coursePlaces.stream()
-        .sorted(Comparator.comparing(CoursePlace::getSequence))
-        .map(cp -> {
-          Place p = cp.getPlace();
-          return CoursePlaceDto.builder()
-              .placeName(p.getPlaceName())
-              .distance(p.getDistance())
-              .categoryType(p.getCategoryType())
-              .imageUrl(p.getImageUrl())
-              .tags(p.getTags())
-              .build();
-        })
-        .collect(Collectors.toList());
 
+  /**
+   * 코스 좋아요
+   */
+  @Transactional
+  public void likeCourse(CustomUserDetails customUser, UUID courseId) {
+    Member member = customUser.getMember();
+    if (member == null) {
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
+
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new CustomException(ErrorCode.COURSE_NOT_FOUND));
+
+    CourseLikeId likeId = new CourseLikeId(member.getMemberId(), course.getCourseId());
+    boolean exists = courseLikeRepository.existsById(likeId);
+
+    if (exists) {
+      // 이미 좋아요된 상태 → 취소
+      courseLikeRepository.deleteById(likeId);
+      long current = course.getLikeCount() == null ? 0L : course.getLikeCount();
+      course.setLikeCount(Math.max(0, current - 1));
+      courseRepository.save(course);
+    } else {
+      // 좋아요가 없는 상태 → 추가
+      CourseLike like = CourseLike.builder()
+          .id(likeId)
+          .member(member)
+          .course(course)
+          .build();
+      courseLikeRepository.save(like);
+      long current = course.getLikeCount() == null ? 0L : course.getLikeCount();
+      course.setLikeCount(current + 1);
+      courseRepository.save(course);
+    }
+  }
+
+
+
+
+  /**
+   * 코스 dto를 빌드하는 공통 메서드
+   */
+  public CourseDto converToCourseDto(Course course) {
     return CourseDto.builder()
         .courseId(course.getCourseId())
-        .nickName(nickName)
+        .nickName(course.getMember().getNickname())
         .title(course.getTitle())
         .description(course.getDescription())
         .freeTime(course.getFreeTime())
         .visibility(course.getVisibility())
         .imageUrl(course.getImageUrl())
-        .placeIds(placeIds)
-        .coursePlaceDtos(placeDtoList)
+        .placeDtos(course.getCoursePlaces().stream()
+            .sorted(Comparator.comparing(CoursePlace::getSequence))
+            .map(cp -> placeService.convertToPlaceDto(cp.getPlace()))
+            .collect(Collectors.toList()))
+        .likeCount(course.getLikeCount())
         .build();
-  }
-
-  /**
-   * 주어진 CoursePlace 목록에서 Place ID를 순서에 맞춰 추출하여 반환
-   */
-  private List<UUID> extractPlaceIds(List<CoursePlace> coursePlaces) {
-    return coursePlaces.stream()
-        .sorted(Comparator.comparing(CoursePlace::getSequence))
-        .map(cp -> cp.getPlace().getPlaceId())
-        .collect(Collectors.toList());
   }
 }
