@@ -2,6 +2,7 @@ package jombi.freemates.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import jombi.freemates.model.constant.Author;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.PlaceDto;
@@ -112,7 +113,7 @@ public class PlaceController {
         """
   )
   @GetMapping("/geocode")
-  public ResponseEntity<PlaceDto> getPlaceByGeocode(
+  public ResponseEntity<List<PlaceDto>> getPlaceByGeocode(
       @RequestParam String x,
       @RequestParam String y
   ) {

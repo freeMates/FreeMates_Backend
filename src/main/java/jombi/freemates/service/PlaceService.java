@@ -1,10 +1,15 @@
 package jombi.freemates.service;
 
 
+import static java.util.stream.Collectors.toList;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jombi.freemates.model.constant.CategoryType;
 import jombi.freemates.model.dto.KakaoPlaceCrawlDetail;
 import jombi.freemates.model.dto.PlaceDto;
@@ -118,19 +123,55 @@ public class PlaceService {
    * 좌표에 따른 장소 조회
    */
   @Transactional(readOnly = true)
-  public PlaceDto getPlacesByGeocode(
-      String x,
-      String y
-  ) {
-    if (x == null || x.trim().isEmpty() || y == null || y.trim().isEmpty()) {
-           throw new CustomException(ErrorCode.INVALID_REQUEST);
-         }
-    Optional<Place> placeOpt = placeRepository.findByXAndY(x, y);
-    if (placeOpt.isEmpty()) {
-      log.warn("좌표 ({}, {})에 해당하는 장소가 없습니다.", x, y);
-      throw new CustomException(ErrorCode.PLACE_NOT_FOUND); // 또는 예외 처리
+  public List<PlaceDto> getPlacesByGeocode(String xStr, String yStr) {
+    double xInput;
+    double yInput;
+    try {
+      xInput = Double.parseDouble(xStr);
+      yInput = Double.parseDouble(yStr);
+    } catch (NumberFormatException e) {
+      throw new CustomException(ErrorCode.INVALID_REQUEST);
     }
-    return convertToPlaceDto(placeOpt.get());
+
+    // 소수점 셋째 자리에서 반올림한 기준값 구하기
+    BigDecimal bdX = BigDecimal.valueOf(xInput).setScale(3, RoundingMode.HALF_EVEN);
+    BigDecimal bdY = BigDecimal.valueOf(yInput).setScale(3, RoundingMode.HALF_EVEN);
+
+    // DB에서 일단 모든 Place를 조회해 온 뒤(규모가 크지 않다면 충분히 괜찮음),
+    // 또는 범위 쿼리를 쓰려면 PlaceRepository에 추가 커스텀 메서드를 만들어도 됨.
+    List<Place> allPlaces = placeRepository.findAll();
+
+    // 필터링: 각 Place 엔티티가 가지고 있는 x, y를 double로 파싱 → 동일하게 소수점 4자리 반올림 → 비교
+    List<Place> matched = allPlaces.stream()
+        .filter(p -> {
+          String px = p.getX();
+          String py = p.getY();
+          if (px == null || py == null || px.isBlank() || py.isBlank()) {
+            return false;
+          }
+          double xPlace, yPlace;
+          try {
+            xPlace = Double.parseDouble(px);
+            yPlace = Double.parseDouble(py);
+          } catch (NumberFormatException ex) {
+            return false;
+          }
+
+          BigDecimal bdXPlace = BigDecimal.valueOf(xPlace).setScale(3, RoundingMode.HALF_EVEN);
+          BigDecimal bdYPlace = BigDecimal.valueOf(yPlace).setScale(3, RoundingMode.HALF_EVEN);
+
+          return bdXPlace.equals(bdX) && bdYPlace.equals(bdY);
+        })
+        .toList();
+
+    if (matched.isEmpty()) {
+      throw new CustomException(ErrorCode.PLACE_NOT_FOUND);
+    }
+
+    // 최종 PlaceDto 리스트로 매핑하여 반환
+    return matched.stream()
+        .map(this::convertToPlaceDto)
+        .collect(toList());
   }
 
   /**
