@@ -81,7 +81,7 @@ public class BookmarkService {
   public List<BookmarkResponse> getMyBookmarks(CustomUserDetails customUserDetails) {
     Member member = customUserDetails.getMember();
     return bookmarkRepository.findAllByMember(member).stream()
-        .map(b -> convertToBookmarkResponse(b))
+        .map(this::convertToBookmarkResponse)
         .collect(Collectors.toList());
   }
 
@@ -92,7 +92,7 @@ public class BookmarkService {
   public Page<BookmarkResponse> getBookmarks(int page, int size, Visibility visibility) {
     return bookmarkRepository
         .findByVisibility(visibility, PageRequest.of(page, size))
-        .map(b -> convertToBookmarkResponse(b));
+        .map(this::convertToBookmarkResponse);
   }
 
   @Transactional
