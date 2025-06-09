@@ -82,21 +82,7 @@ public class CourseService {
             .build()
     );
 
-    List<UUID> placeIds = req.getPlaceIds();
-    List<CoursePlace> coursePlaceList = IntStream.range(0, placeIds.size())
-        .mapToObj(idx -> {
-          UUID placeId = placeIds.get(idx);
-          Place place = placeRepository.findByPlaceId(placeId)
-              .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
-          CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
-          return CoursePlace.builder()
-              .coursePlaceId(compositeId)
-              .course(course)
-              .place(place)
-              .sequence(idx + 1)
-              .build();
-        })
-        .collect(Collectors.toList());
+    List<CoursePlace> coursePlaceList = createCoursePlaceList(course, req.getPlaceIds());
 
     // CoursePlace 한꺼번에 저장
     coursePlaceRepository.saveAll(coursePlaceList);
@@ -210,21 +196,7 @@ public class CourseService {
     course.setVisibility(req.getVisibility());
 
     // CoursePlace 업데이트
-    List<UUID> placeIds = req.getPlaceIds();
-    List<CoursePlace> coursePlaceList = IntStream.range(0, placeIds.size())
-        .mapToObj(idx -> {
-          UUID placeId = placeIds.get(idx);
-          Place place = placeRepository.findByPlaceId(placeId)
-              .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
-          CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
-          return CoursePlace.builder()
-              .coursePlaceId(compositeId)
-              .course(course)
-              .place(place)
-              .sequence(idx + 1)
-              .build();
-        })
-        .collect(Collectors.toList());
+    List<CoursePlace> coursePlaceList = createCoursePlaceList(course, req.getPlaceIds());
 
     // 기존 CoursePlace 삭제 후 새로 저장
     coursePlaceRepository.deleteAllByCourse(course);
@@ -255,5 +227,23 @@ public class CourseService {
             .collect(Collectors.toList()))
         .likeCount(course.getLikeCount())
         .build();
+  }
+
+  private List<CoursePlace> createCoursePlaceList(Course course, List<UUID> placeIds) {
+    return IntStream.range(0, placeIds.size())
+        .mapToObj(idx -> {
+          UUID placeId = placeIds.get(idx);
+          Place place = placeRepository.findByPlaceId(placeId)
+              .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
+          CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
+
+          return CoursePlace.builder()
+              .coursePlaceId(compositeId)
+              .course(course)
+              .place(place)
+              .sequence(idx + 1)
+              .build();
+        })
+        .collect(Collectors.toList());
   }
 }

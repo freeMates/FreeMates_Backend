@@ -252,7 +252,6 @@ public class BookmarkController {
 
   @PostMapping(value ="/update/{bookmarkId}",
   consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<Void> updateBookmark(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable("bookmarkId") UUID bookmarkId,

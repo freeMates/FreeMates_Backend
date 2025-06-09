@@ -224,7 +224,6 @@ public class CourseController {
    */
   @PostMapping(value ="/update/{courseId}",
   consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<Void> updateCourse(
       @AuthenticationPrincipal CustomUserDetails user,
       @PathVariable("courseId") UUID courseId,
