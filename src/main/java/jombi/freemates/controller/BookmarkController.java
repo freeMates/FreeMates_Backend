@@ -250,4 +250,25 @@ public class BookmarkController {
     return ResponseEntity.ok().build();  // 혹은 204 No Content
   }
 
+  @PostMapping(value ="/update/{bookmarkId}",
+  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Void> updateBookmark(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable("bookmarkId") UUID bookmarkId,
+      @RequestParam String title,
+      @RequestParam String description,
+      @RequestParam PinColor pinColor,
+      @RequestParam Visibility visibility,
+      @RequestParam(value = "image", required = false) MultipartFile image
+  ) {
+    BookmarkRequest req = BookmarkRequest.builder()
+        .title(title)
+        .description(description)
+        .pinColor(pinColor)
+        .visibility(visibility)
+        .build();
+    bookmarkService.updateBookmark(customUserDetails, bookmarkId, req, image);
+    return ResponseEntity.ok().build();
+  }
+
 }

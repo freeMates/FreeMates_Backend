@@ -82,21 +82,7 @@ public class CourseService {
             .build()
     );
 
-    List<UUID> placeIds = req.getPlaceIds();
-    List<CoursePlace> coursePlaceList = IntStream.range(0, placeIds.size())
-        .mapToObj(idx -> {
-          UUID placeId = placeIds.get(idx);
-          Place place = placeRepository.findByPlaceId(placeId)
-              .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
-          CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
-          return CoursePlace.builder()
-              .coursePlaceId(compositeId)
-              .course(course)
-              .place(place)
-              .sequence(idx + 1)
-              .build();
-        })
-        .collect(Collectors.toList());
+    List<CoursePlace> coursePlaceList = createCoursePlaceList(course, req.getPlaceIds());
 
     // CoursePlace 한꺼번에 저장
     coursePlaceRepository.saveAll(coursePlaceList);
@@ -173,6 +159,52 @@ public class CourseService {
       courseRepository.save(course);
     }
   }
+  @Transactional
+  public void updateCourse(
+      CustomUserDetails customUser,
+      UUID courseId,
+      CourseRequest req,
+      MultipartFile image
+
+  ) {
+    // 회원 확인
+    Member member = customUser.getMember();
+    if (member == null) {
+      throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+    }
+
+    // 코스 조회
+    Course course = courseRepository.findById(courseId)
+        .orElseThrow(() -> new CustomException(ErrorCode.COURSE_NOT_FOUND));
+    UUID ownerId = course.getMember().getMemberId();
+    UUID currentUserId = member.getMemberId();
+    if (!ownerId.equals(currentUserId)) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    // 이미지 저장
+    String imageUrl = null;
+    if (image != null && !image.isEmpty()) {
+      imageUrl = storage.storeImage(image);
+      course.setImageUrl(imageUrl);
+    }
+
+    // 코스 정보 업데이트
+    course.setTitle(req.getTitle());
+    course.setDescription(req.getDescription());
+    course.setFreeTime(req.getFreeTime());
+    course.setVisibility(req.getVisibility());
+
+    // CoursePlace 업데이트
+    List<CoursePlace> coursePlaceList = createCoursePlaceList(course, req.getPlaceIds());
+
+    // 기존 CoursePlace 삭제 후 새로 저장
+    coursePlaceRepository.deleteAllByCourse(course);
+    coursePlaceRepository.saveAll(coursePlaceList);
+
+    entityManager.flush();
+  }
+
 
 
 
@@ -195,5 +227,23 @@ public class CourseService {
             .collect(Collectors.toList()))
         .likeCount(course.getLikeCount())
         .build();
+  }
+
+  private List<CoursePlace> createCoursePlaceList(Course course, List<UUID> placeIds) {
+    return IntStream.range(0, placeIds.size())
+        .mapToObj(idx -> {
+          UUID placeId = placeIds.get(idx);
+          Place place = placeRepository.findByPlaceId(placeId)
+              .orElseThrow(() -> new CustomException(ErrorCode.PLACE_NOT_FOUND));
+          CoursePlaceId compositeId = new CoursePlaceId(course.getCourseId(), place.getPlaceId());
+
+          return CoursePlace.builder()
+              .coursePlaceId(compositeId)
+              .course(course)
+              .place(place)
+              .sequence(idx + 1)
+              .build();
+        })
+        .collect(Collectors.toList());
   }
 }
