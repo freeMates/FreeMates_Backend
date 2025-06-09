@@ -188,6 +188,46 @@ public class BookmarkService {
     bookmarkPlaceRepository.save(bp);
 
   }
+  @Transactional
+  public void updateBookmark(
+      CustomUserDetails customUserDetails,
+      UUID bookmarkId,
+      BookmarkRequest req,
+      MultipartFile image
+  ) {
+    // 파일이 있으면 저장 후 imageUrl 세팅, 없으면 imageUrl = null
+    String imageUrl = null;
+    if (image != null && !image.isEmpty()) {
+      imageUrl = storage.storeImage(image);
+    }
+
+    // Member 조회
+    Member member = customUserDetails.getMember();
+
+    // 기존 북마크 조회
+    Bookmark bookmark = bookmarkRepository.findById(bookmarkId)
+        .orElseThrow(() -> new CustomException(ErrorCode.BOOKMARK_NOT_FOUND));
+
+    // 소유자 검사
+    UUID ownerId = bookmark.getMember().getMemberId();
+    UUID currentUserId = member.getMemberId();
+    if (!ownerId.equals(currentUserId)) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED);
+    }
+
+    // 업데이트
+    bookmark.setTitle(req.getTitle());
+    bookmark.setDescription(req.getDescription());
+    bookmark.setPinColor(req.getPinColor());
+    bookmark.setVisibility(req.getVisibility());
+    bookmark.setImageUrl(imageUrl);   // 파일이 없으면 null, 있으면 저장된 경로
+
+    // DB 저장
+    bookmarkRepository.save(bookmark);
+  }
+  /**
+   * Bookmark 엔티티를 BookmarkDto로 변환하는 공통 메서드
+   */
 
 
   public BookmarkDto convertToBookmarkDto(Bookmark bookmark) {

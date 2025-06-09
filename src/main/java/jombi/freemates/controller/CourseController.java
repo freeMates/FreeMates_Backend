@@ -219,7 +219,34 @@ public class CourseController {
     courseService.likeCourse(customUserDetails, courseId);
     return ResponseEntity.ok().build();
   }
+  /**
+   * 코스 수정
+   */
+  @PostMapping(value ="/update/{courseId}",
+  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @ResponseStatus(HttpStatus.CREATED)
+  public ResponseEntity<Void> updateCourse(
+      @AuthenticationPrincipal CustomUserDetails user,
+      @PathVariable("courseId") UUID courseId,
+      @RequestParam("title") String title,
+      @RequestParam("description") String description,
+      @RequestParam("freeTime") Integer freeTime,
+      @RequestParam("visibility") Visibility visibility,
+      // placeIds를 여러 개 RquestParam으로 받을 수도 있고, 한 문자열(콤마 구분)로 받을 수도 있음
+      @RequestParam("placeIds") List<UUID> placeIds,
+      @RequestParam(value = "image", required = false) MultipartFile image
+  ) {
+    CourseRequest req = CourseRequest.builder()
+        .title(title)
+        .description(description)
+        .freeTime(freeTime)
+        .visibility(visibility)
+        .placeIds(placeIds)
+        .build();
 
+    courseService.updateCourse(user, courseId, req, image);
+    return ResponseEntity.ok().build();
+  }
 
 
 
