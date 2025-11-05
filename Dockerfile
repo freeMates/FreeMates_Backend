@@ -1,5 +1,5 @@
-FROM amazoncorretto:21
-# FROM openjdk:17-jdk
+FROM eclipse-temurin:17-jdk-alpine
+# FROM openjdk:17-jdk (deprecated)
 ARG JAR_FILE=build/libs/*.jar
 
 COPY ${JAR_FILE} my-project.jar
